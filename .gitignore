@@ -1,0 +1,26 @@
+node_modules/
+dist/
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+Thumbs.db
+
+# Upload storage
+apps/api/uploads/
+apps/api/temp/
+
+# SQLite databases + local data (may contain API keys)
+apps/api/data/
+apps/api/*.db
+apps/api/*.db-shm
+apps/api/*.db-wal
+
+# Build artifacts
+apps/web/dist/
+apps/api/dist/
+packages/*/dist/
+
+# pnpm
+.pnpm-store/

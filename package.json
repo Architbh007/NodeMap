@@ -1,0 +1,17 @@
+{
+  "name": "nodemap",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --prefix-colors \"cyan,magenta\" --names \"WEB,API\" \"pnpm --filter @nodemap/web dev\" \"pnpm --filter @nodemap/api dev\"",
+    "build": "pnpm --filter @nodemap/types build && pnpm --filter @nodemap/shared build && pnpm --filter @nodemap/web build && pnpm --filter @nodemap/api build",
+    "type-check": "pnpm --recursive type-check",
+    "lint": "pnpm --recursive lint",
+    "clean": "pnpm --recursive clean && rimraf node_modules"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2",
+    "rimraf": "^5.0.7",
+    "typescript": "^5.4.5"
+  }
+}
