@@ -23,6 +23,10 @@ function setKV(key: string, value: string): void {
   }
 }
 
+function deleteKV(key: string): void {
+  dbRun('DELETE FROM app_settings WHERE key = ?', [key]);
+}
+
 const KEYS = {
   aiProvider: 'ai.provider',
   aiModel:    'ai.model',
@@ -77,6 +81,11 @@ export function getAiApiKey(provider: AiProviderId): string | undefined {
   return undefined;
 }
 
+export function getGithubToken(): string | undefined {
+  const key = getKV(KEYS.githubToken) ?? process.env.GITHUB_TOKEN;
+  return key?.trim() || undefined;
+}
+
 export function updateSettings(update: UpdateSettingsInput): AppSettings {
   if (update.ai) {
     if (update.ai.provider) setKV(KEYS.aiProvider, update.ai.provider);
@@ -84,8 +93,14 @@ export function updateSettings(update: UpdateSettingsInput): AppSettings {
     if (update.ai.apiKey !== undefined) {
       const p = update.ai.provider ?? (getKV(KEYS.aiProvider) as AiProviderId | undefined) ?? 'openai';
       const key = update.ai.apiKey.trim();
-      if (p === 'openai') setKV(KEYS.aiKeyOpenAI, key);
-      else if (p === 'gemini') setKV(KEYS.aiKeyGemini, key);
+      if (!key) {
+        if (p === 'openai') deleteKV(KEYS.aiKeyOpenAI);
+        else if (p === 'gemini') deleteKV(KEYS.aiKeyGemini);
+      } else if (p === 'openai') {
+        setKV(KEYS.aiKeyOpenAI, key);
+      } else if (p === 'gemini') {
+        setKV(KEYS.aiKeyGemini, key);
+      }
     }
   }
   if (update.ignoredPaths) setKV(KEYS.ignored, JSON.stringify(update.ignoredPaths));
@@ -93,6 +108,10 @@ export function updateSettings(update: UpdateSettingsInput): AppSettings {
     if (update.graph.showExternalModules !== undefined) setKV(KEYS.graphShowExternal, String(update.graph.showExternalModules));
     if (update.graph.edgeAnimations !== undefined) setKV(KEYS.graphEdgeAnim, String(update.graph.edgeAnimations));
   }
-  if (update.github?.token !== undefined) setKV(KEYS.githubToken, update.github.token);
+  if (update.github?.token !== undefined) {
+    const token = update.github.token.trim();
+    if (!token) deleteKV(KEYS.githubToken);
+    else setKV(KEYS.githubToken, token);
+  }
   return getSettings();
 }

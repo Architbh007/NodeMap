@@ -22,9 +22,13 @@ import type {
 const BASE = '/api';
 
 async function request<T>(url: string, init?: RequestInit): Promise<ApiResponse<T>> {
+  const headers = new Headers(init?.headers);
+  if (init?.body != null && init.body !== '' && !headers.has('Content-Type')) {
+    headers.set('Content-Type', 'application/json');
+  }
   const res = await fetch(`${BASE}${url}`, {
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
     ...init,
+    headers,
   });
   let json: ApiResponse<T>;
   try {
@@ -161,6 +165,12 @@ export const analysisApi = {
       method: 'POST',
       body: JSON.stringify({ changedFiles }),
     }),
+
+  prImpactFromGithub: (repoId: string, prUrl: string) =>
+    request<PrImpactResult>(`/repositories/${repoId}/pr-impact/github`, {
+      method: 'POST',
+      body: JSON.stringify({ prUrl }),
+    }),
 };
 
 // ─── Reports ──────────────────────────────────────────────
@@ -196,4 +206,5 @@ export const settingsApi = {
       body: JSON.stringify(body),
     }),
   testAi: () => request<{ ok: boolean; error?: string }>('/settings/ai/test', { method: 'POST' }),
+  testGithub: () => request<{ ok: boolean; error?: string; login?: string }>('/settings/github/test', { method: 'POST' }),
 };

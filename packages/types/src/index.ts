@@ -512,6 +512,16 @@ export interface PrImpactRequest {
   changedFiles: string[];
 }
 
+export interface GitHubPrMeta {
+  owner: string;
+  repo: string;
+  number: number;
+  title: string;
+  url: string;
+  state: string;
+  changedFileCount: number;
+}
+
 export interface PrImpactResult {
   changedFiles: string[];
   directDependents: ImpactRef[];
@@ -520,6 +530,10 @@ export interface PrImpactResult {
   affectedModules: string[];
   riskLevel: RiskLevel;
   riskReasons: string[];
+  /** Set when analysis was driven by a GitHub pull request URL. */
+  pr?: GitHubPrMeta;
+  /** Changed paths from the PR that did not match any ingested file. */
+  unmatchedFiles?: string[];
 }
 
 // ============================================================

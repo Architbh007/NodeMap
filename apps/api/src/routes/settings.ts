@@ -1,8 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import type { ApiResponse, AppSettings } from '@nodemap/types';
-import { getSettings, updateSettings } from '../storage/settingsStore.js';
+import { getSettings, updateSettings, getGithubToken } from '../storage/settingsStore.js';
 import { testAiConnection } from '../ai/aiService.js';
+import { testGithubConnection } from '../services/githubClient.js';
 
 const UpdateSchema = z.object({
   ai: z.object({
@@ -44,6 +45,18 @@ const settings: FastifyPluginAsync = async (fastify) => {
     '/settings/ai/test',
     async () => {
       const result = await testAiConnection();
+      return { success: true, data: result };
+    },
+  );
+
+  fastify.post<{ Reply: ApiResponse<{ ok: boolean; error?: string; login?: string }> }>(
+    '/settings/github/test',
+    async () => {
+      const token = getGithubToken();
+      if (!token) {
+        return { success: true, data: { ok: false, error: 'No GitHub token configured' } };
+      }
+      const result = await testGithubConnection(token);
       return { success: true, data: result };
     },
   );

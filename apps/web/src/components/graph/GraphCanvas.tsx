@@ -554,7 +554,7 @@ export function GraphCanvas({ graphNodes, graphEdges }: GraphCanvasProps) {
 
         <MiniMap
           position="bottom-left"
-          style={{ marginLeft: activePanel ? '16rem' : '14rem' }}
+          style={{ marginLeft: activePanel ? '16rem' : '0.75rem', marginBottom: '2.75rem' }}
           nodeColor={(node) => {
             const riskLevel = (node.data as NodeData)?.riskLevel;
             if (riskLevel && RISK_MINIMAP_COLOR[riskLevel]) return RISK_MINIMAP_COLOR[riskLevel];

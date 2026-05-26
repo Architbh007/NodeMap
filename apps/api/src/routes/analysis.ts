@@ -5,7 +5,8 @@ import type {
 } from '@nodemap/types';
 import { getOrBuildAnalysis, invalidateAnalysis } from '../analysis/analysisCache.js';
 import { buildEndpointFlow } from '../analysis/endpoints/endpointFlow.js';
-import { computeImpact, computeImpactMulti } from '../analysis/impact/impactEngine.js';
+import { computeImpact } from '../analysis/impact/impactEngine.js';
+import { buildPrImpactResult, buildPrImpactFromGithub } from '../analysis/impact/prImpactService.js';
 import { loadRepoData } from '../analysis/repoAnalysis.js';
 import { dbGet } from '../storage/db.js';
 import type { RepositoryRow } from '../types/index.js';
@@ -92,57 +93,35 @@ const analysisRoutes: FastifyPluginAsync = async (fastify) => {
       return { success: false, error: 'changedFiles[] required' };
     }
     try {
-      const data = loadRepoData(request.params.id);
-      const analysis = getOrBuildAnalysis(request.params.id);
-      const pathToId = new Map(data.files.map((f) => [f.path, f.id]));
-      const fileIds: string[] = [];
-      const unmatched: string[] = [];
-      for (const p of parsed.data.changedFiles) {
-        const norm = p.replace(/\\/g, '/').replace(/^\.\//, '');
-        const id = pathToId.get(norm);
-        if (id) fileIds.push(id); else unmatched.push(norm);
-      }
-      if (fileIds.length === 0) {
-        return {
-          success: true,
-          data: {
-            changedFiles: parsed.data.changedFiles,
-            directDependents: [],
-            indirectDependents: [],
-            affectedEndpoints: [],
-            affectedModules: [],
-            riskLevel: 'low',
-            riskReasons: ['None of the changed files match a file in this repository.'],
-          },
-        };
-      }
-      const impact = computeImpactMulti(fileIds, {
-        files: data.files,
-        deps: data.deps,
-        endpoints: analysis.endpoints,
-      });
-      const riskReasons: string[] = [];
-      if (impact.affectedEndpoints.length) riskReasons.push(`Touches ${impact.affectedEndpoints.length} HTTP endpoint(s)`);
-      if (impact.directDependents.length >= 10) riskReasons.push(`${impact.directDependents.length} direct dependents`);
-      if (impact.indirectDependents.length >= 30) riskReasons.push(`${impact.indirectDependents.length} indirect dependents`);
-      if (!riskReasons.length) riskReasons.push('Contained change — no widespread impact detected');
-      if (unmatched.length) riskReasons.push(`${unmatched.length} file(s) not found in this repo (ignored)`);
-
-      return {
-        success: true,
-        data: {
-          changedFiles: parsed.data.changedFiles,
-          directDependents: impact.directDependents,
-          indirectDependents: impact.indirectDependents,
-          affectedEndpoints: impact.affectedEndpoints,
-          affectedModules: impact.affectedModules,
-          riskLevel: impact.riskLevel,
-          riskReasons,
-        },
-      };
+      const data = buildPrImpactResult(request.params.id, parsed.data.changedFiles);
+      return { success: true, data };
     } catch (err) {
       reply.status(500);
       return { success: false, error: err instanceof Error ? err.message : 'Unknown error' };
+    }
+  });
+
+  const PrImpactGithubSchema = z.object({
+    prUrl: z.string().min(1).max(512),
+  });
+  fastify.post<{
+    Params: { id: string };
+    Body: { prUrl: string };
+    Reply: ApiResponse<PrImpactResult>;
+  }>('/repositories/:id/pr-impact/github', async (request, reply) => {
+    const parsed = PrImpactGithubSchema.safeParse(request.body);
+    if (!parsed.success) {
+      reply.status(400);
+      return { success: false, error: 'prUrl is required' };
+    }
+    try {
+      const data = await buildPrImpactFromGithub(request.params.id, parsed.data.prUrl.trim());
+      return { success: true, data };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Unknown error';
+      const status = message.includes('token') || message.includes('GitHub') ? 400 : 500;
+      reply.status(status);
+      return { success: false, error: message };
     }
   });
 

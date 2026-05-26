@@ -1,21 +1,23 @@
-import { Folder, FileCode, Layers, Package, Globe } from 'lucide-react';
+import { useState } from 'react';
+import { Folder, FileCode, Layers, Package, Globe, ChevronUp, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useGraphStore } from '@/store/graphStore';
+import { usesFlowLayout } from '@/lib/graphLayout';
 
 const LEGEND = [
-  { icon: <Folder className="w-3 h-3" />,   color: 'text-node-folder',  bg: 'bg-node-folder/15',  label: 'Folder' },
-  { icon: <FileCode className="w-3 h-3" />, color: 'text-node-file',    bg: 'bg-node-file/15',    label: 'File' },
-  { icon: <Layers className="w-3 h-3" />,   color: 'text-node-service', bg: 'bg-node-service/15', label: 'Service' },
-  { icon: <Globe className="w-3 h-3" />,    color: 'text-node-route',   bg: 'bg-node-route/15',   label: 'Route' },
-  { icon: <Package className="w-3 h-3" />,  color: 'text-node-module',  bg: 'bg-node-module/15',  label: 'Module' },
+  { icon: <Folder className="w-2.5 h-2.5" />,   color: 'text-node-folder',  bg: 'bg-node-folder/15',  label: 'Folder' },
+  { icon: <FileCode className="w-2.5 h-2.5" />, color: 'text-node-file',    bg: 'bg-node-file/15',    label: 'File' },
+  { icon: <Layers className="w-2.5 h-2.5" />,   color: 'text-node-service', bg: 'bg-node-service/15', label: 'Service' },
+  { icon: <Globe className="w-2.5 h-2.5" />,    color: 'text-node-route',   bg: 'bg-node-route/15',   label: 'Route' },
+  { icon: <Package className="w-2.5 h-2.5" />,  color: 'text-node-module',  bg: 'bg-node-module/15',  label: 'Module' },
 ];
 
 const EDGE_LEGEND = [
-  { stroke: 'rgba(99,102,241,0.5)',  label: 'Tree',      dashed: false },
-  { stroke: '#6366f1',               label: 'Imports',   dashed: false },
-  { stroke: '#10b981',               label: 'API flow',  dashed: false },
-  { stroke: '#8b5cf6',               label: 'Services',  dashed: false },
-  { stroke: '#ef4444',               label: 'Circular',  dashed: true },
+  { stroke: 'rgba(99,102,241,0.5)', label: 'Tree',     dashed: false },
+  { stroke: '#6366f1',               label: 'Imports',  dashed: false },
+  { stroke: '#10b981',               label: 'API flow', dashed: false },
+  { stroke: '#8b5cf6',               label: 'Services', dashed: false },
+  { stroke: '#ef4444',               label: 'Circular', dashed: true },
 ];
 
 const RISK_LABELS = [
@@ -26,63 +28,105 @@ const RISK_LABELS = [
 ];
 
 export function GraphLegend() {
-  const { activePanel } = useGraphStore();
+  const { activePanel, selectedNodeId, edgeView } = useGraphStore();
+  const [expanded, setExpanded] = useState(false);
+  const showFlowHint = usesFlowLayout(edgeView);
 
   return (
     <div
       className={cn(
-        'absolute bottom-3 z-10 glass rounded-lg p-3 space-y-2.5 shadow-lg text-[11px] transition-all duration-200',
-        activePanel ? 'left-[15.5rem]' : 'left-3',
+        'absolute bottom-3 z-10 flex flex-col items-center pointer-events-none transition-all duration-200',
+        activePanel && selectedNodeId && 'left-[15.5rem] right-[18.5rem]',
+        activePanel && !selectedNodeId && 'left-[15.5rem] right-14',
+        !activePanel && selectedNodeId && 'left-3 right-[18.5rem]',
+        !activePanel && !selectedNodeId && 'left-14 right-14',
       )}
     >
-      <p className="text-muted-foreground font-mono uppercase tracking-wider text-[10px]">Nodes</p>
-      <div className="space-y-1.5">
-        {LEGEND.map(({ icon, color, bg, label }) => (
-          <div key={label} className="flex items-center gap-2">
-            <div className={cn('w-5 h-5 rounded flex items-center justify-center', bg, color)}>
-              {icon}
-            </div>
-            <span className="text-muted-foreground">{label}</span>
+      <div className="pointer-events-auto glass rounded-lg shadow-lg text-[10px] max-w-full">
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          className="flex items-center gap-2 px-2.5 py-1.5 w-full text-left hover:bg-secondary/30 rounded-lg transition-colors"
+          aria-expanded={expanded}
+        >
+          <span className="font-mono uppercase tracking-wider text-muted-foreground/70 text-[9px]">Legend</span>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 flex-1 min-w-0">
+            {EDGE_LEGEND.slice(0, 3).map(({ stroke, label, dashed }) => (
+              <span key={label} className="inline-flex items-center gap-1 text-muted-foreground whitespace-nowrap">
+                <svg width="14" height="6" className="shrink-0" aria-hidden>
+                  <line
+                    x1="0"
+                    y1="3"
+                    x2="14"
+                    y2="3"
+                    stroke={stroke}
+                    strokeWidth="2"
+                    strokeDasharray={dashed ? '3 2' : undefined}
+                  />
+                </svg>
+                {label}
+              </span>
+            ))}
+            <span className="text-muted-foreground/40">·</span>
+            {RISK_LABELS.map(({ color, label }) => (
+              <span key={label} className="inline-flex items-center gap-0.5 text-muted-foreground whitespace-nowrap">
+                <span className={cn('w-1.5 h-1.5 rounded-full', color)} />
+                {label}
+              </span>
+            ))}
           </div>
-        ))}
-      </div>
+          {expanded ? (
+            <ChevronDown className="w-3 h-3 text-muted-foreground shrink-0" />
+          ) : (
+            <ChevronUp className="w-3 h-3 text-muted-foreground shrink-0" />
+          )}
+        </button>
 
-      <div className="border-t border-border pt-2.5">
-        <p className="text-muted-foreground font-mono uppercase tracking-wider text-[10px] mb-1.5">Flow rows</p>
-        <p className="text-[10px] text-muted-foreground/70 leading-relaxed mb-2">
-          Imports / API / All stack nodes by architecture (entry → pages → components → services).
-        </p>
-        <p className="text-muted-foreground font-mono uppercase tracking-wider text-[10px] mb-1.5">Lines</p>
-        <div className="space-y-1.5">
-          {EDGE_LEGEND.map(({ stroke, label, dashed }) => (
-            <div key={label} className="flex items-center gap-2">
-              <svg width="20" height="8" className="shrink-0">
-                <line
-                  x1="0"
-                  y1="4"
-                  x2="20"
-                  y2="4"
-                  stroke={stroke}
-                  strokeWidth="2"
-                  strokeDasharray={dashed ? '4 2' : undefined}
-                />
-              </svg>
-              <span className="text-muted-foreground">{label}</span>
+        {expanded && (
+          <div className="border-t border-border px-2.5 py-2 space-y-2">
+            <div>
+              <p className="text-muted-foreground font-mono uppercase tracking-wider text-[9px] mb-1">Nodes</p>
+              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                {LEGEND.map(({ icon, color, bg, label }) => (
+                  <div key={label} className="flex items-center gap-1">
+                    <div className={cn('w-4 h-4 rounded flex items-center justify-center', bg, color)}>
+                      {icon}
+                    </div>
+                    <span className="text-muted-foreground">{label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
 
-      <div className="border-t border-border pt-2.5">
-        <p className="text-muted-foreground font-mono uppercase tracking-wider text-[10px] mb-1.5">Risk</p>
-        <div className="flex items-center gap-2">
-          {RISK_LABELS.map(({ color, label }) => (
-            <div key={label} className="flex items-center gap-1">
-              <div className={cn('w-2 h-2 rounded-full', color)} />
-              <span className="text-muted-foreground">{label}</span>
+            <div>
+              <p className="text-muted-foreground font-mono uppercase tracking-wider text-[9px] mb-1">Lines</p>
+              <div className="flex flex-wrap gap-x-3 gap-y-1">
+                {EDGE_LEGEND.map(({ stroke, label, dashed }) => (
+                  <div key={label} className="flex items-center gap-1">
+                    <svg width="14" height="6" className="shrink-0" aria-hidden>
+                      <line
+                        x1="0"
+                        y1="3"
+                        x2="14"
+                        y2="3"
+                        stroke={stroke}
+                        strokeWidth="2"
+                        strokeDasharray={dashed ? '3 2' : undefined}
+                      />
+                    </svg>
+                    <span className="text-muted-foreground">{label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-          ))}
-        </div>
+
+            {showFlowHint && (
+              <p className="text-[9px] font-mono text-muted-foreground/60 leading-snug">
+                Flow rows: entry → pages → components → services (top to bottom).
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
