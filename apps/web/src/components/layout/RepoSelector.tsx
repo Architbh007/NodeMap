@@ -34,7 +34,7 @@ export function RepoSelector() {
 
   return (
     <header className="h-12 border-b border-border bg-background/95 backdrop-blur-sm fixed top-0 left-56 right-0 z-30 flex items-center px-4 gap-3">
-      <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">repository</span>
+      <span className="text-xs font-medium text-muted-foreground">Repository</span>
 
       <div ref={ref} className="relative">
         <button
@@ -51,7 +51,7 @@ export function RepoSelector() {
           {active ? (
             <span className="max-w-[280px] truncate">{active.name}</span>
           ) : repos.length === 0 ? (
-            <span className="text-muted-foreground">no repos — upload one</span>
+            <span className="text-muted-foreground">No repos yet. Upload one</span>
           ) : (
             <span>Select repository</span>
           )}

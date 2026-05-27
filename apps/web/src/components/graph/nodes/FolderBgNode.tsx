@@ -14,7 +14,7 @@ export const FolderBgNode = memo(({ data }: NodeProps) => {
   return (
     <div
       style={{ width, height }}
-      className="rounded-xl border border-dashed border-node-folder/30 bg-node-folder/5 relative cursor-pointer"
+      className="rounded-xl border border-node-folder/30 bg-node-folder/5 relative cursor-pointer"
     >
       <div className="absolute top-2.5 left-3 flex items-center gap-1.5 select-none">
         <FolderOpen className="w-3 h-3 text-node-folder/50" />

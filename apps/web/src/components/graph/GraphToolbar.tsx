@@ -3,7 +3,6 @@ import {
   Layers, GitBranch, Zap, AlertTriangle, Target, Search,
   GitMerge, Skull, BarChart2, Sparkles, Link2, CircleDot,
 } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { useGraphStore, type AnalysisPanel } from '@/store/graphStore';
 import { SearchDropdown } from './SearchDropdown';
@@ -13,10 +12,10 @@ import type { GraphMode, GraphEdgeView, GraphNode } from '@nodemap/types';
 import { TUNNER } from '@/constants/tunner';
 
 const EDGE_VIEWS: { id: GraphEdgeView; label: string; icon: React.ReactNode; hint: string }[] = [
-  { id: 'structure', label: 'Tree',      icon: <Layers className="w-3.5 h-3.5" />,    hint: 'Folder hierarchy — one row of direct children per folder' },
-  { id: 'imports',   label: 'Imports',   icon: <GitBranch className="w-3.5 h-3.5" />, hint: 'Layered import flow — dependencies above importers' },
-  { id: 'api',       label: 'API',       icon: <Zap className="w-3.5 h-3.5" />,        hint: 'Layered API stack — routes → controllers → services → repos' },
-  { id: 'circular',  label: 'Circular',  icon: <CircleDot className="w-3.5 h-3.5" />,  hint: 'Circular deps on a layered tree — cycles grouped on row 2' },
+  { id: 'structure', label: 'Tree',      icon: <Layers className="w-3.5 h-3.5" />,    hint: 'Folder hierarchy with one row of direct children per folder' },
+  { id: 'imports',   label: 'Imports',   icon: <GitBranch className="w-3.5 h-3.5" />, hint: 'Layered import flow: dependencies above importers' },
+  { id: 'api',       label: 'API',       icon: <Zap className="w-3.5 h-3.5" />,        hint: 'Layered API stack: routes → controllers → services → repos' },
+  { id: 'circular',  label: 'Circular',  icon: <CircleDot className="w-3.5 h-3.5" />,  hint: 'Circular deps on a layered tree; cycles grouped on row 2' },
   { id: 'combined',  label: 'All',       icon: <Link2 className="w-3.5 h-3.5" />,      hint: 'Architecture rows + all downward relationship lines' },
 ];
 
@@ -76,7 +75,7 @@ export function GraphToolbar({ graphNodes, searchInputRef }: Props) {
   return (
     <div className="absolute top-3 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center gap-1.5">
       {/* Edge / line view selector */}
-      <div className="flex items-center gap-1.5 glass rounded-lg px-2 py-1.5 shadow-lg">
+      <div className="flex items-center gap-2 glass rounded-xl px-2.5 py-1.5 shadow-lg">
         <span className="text-[9px] font-mono text-muted-foreground/50 uppercase tracking-widest hidden sm:inline mr-0.5">
           lines
         </span>
@@ -100,8 +99,6 @@ export function GraphToolbar({ graphNodes, searchInputRef }: Props) {
           ))}
         </div>
 
-        <Separator orientation="vertical" className="h-5" />
-
         {/* Risk / impact overlays */}
         <div className="flex items-center gap-0.5">
           {OVERLAY_MODES.map((m) => (
@@ -121,8 +118,6 @@ export function GraphToolbar({ graphNodes, searchInputRef }: Props) {
             </button>
           ))}
         </div>
-
-        <Separator orientation="vertical" className="h-5" />
 
         {/* Analysis panel toggles */}
         <div className="flex items-center gap-0.5">
@@ -194,8 +189,6 @@ export function GraphToolbar({ graphNodes, searchInputRef }: Props) {
           </button>
         </div>
 
-        <Separator orientation="vertical" className="h-5" />
-
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-muted-foreground pointer-events-none" />
@@ -217,8 +210,6 @@ export function GraphToolbar({ graphNodes, searchInputRef }: Props) {
           )}
           <SearchDropdown graphNodes={graphNodes} />
         </div>
-
-        <Separator orientation="vertical" className="h-5" />
 
         <ExportMenu />
       </div>

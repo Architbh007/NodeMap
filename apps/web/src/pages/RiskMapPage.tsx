@@ -188,7 +188,7 @@ export function RiskMapPage() {
                   {selectedRisk.inputs.inCircularDep && (
                     <div className="flex items-start gap-2 text-xs font-mono text-risk-high px-2 py-1.5 border border-risk-high/30 rounded-sm">
                       <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
-                      <span>Part of a circular dependency — refactoring is risky.</span>
+                      <span>Part of a circular dependency. Refactoring is risky.</span>
                     </div>
                   )}
                 </>

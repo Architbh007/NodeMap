@@ -51,7 +51,7 @@ export default {
         'accordion-down':  { from: { height: '0' }, to: { height: 'var(--radix-accordion-content-height)' } },
         'accordion-up':    { from: { height: 'var(--radix-accordion-content-height)' }, to: { height: '0' } },
         'fade-in':         { from: { opacity: '0', transform: 'translateY(6px)' }, to: { opacity: '1', transform: 'none' } },
-        'pulse-glow':      { '0%,100%': { boxShadow: '0 0 8px rgba(0,255,135,0.3)' }, '50%': { boxShadow: '0 0 28px rgba(0,255,135,0.65)' } },
+        'pulse-glow':      { '0%,100%': { boxShadow: '0 0 8px hsl(158 64% 48% / 0.25)' }, '50%': { boxShadow: '0 0 28px hsl(158 64% 48% / 0.45)' } },
         'shimmer':         { from: { backgroundPosition: '-200% 0' }, to: { backgroundPosition: '200% 0' } },
         'cursor-blink':    { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0' } },
         'draw-line':       { from: { strokeDashoffset: '1000' }, to: { strokeDashoffset: '0' } },
@@ -65,10 +65,10 @@ export default {
         'cursor-blink':   'cursor-blink 1.1s step-end infinite',
       },
       backgroundImage: {
-        'grid-pattern': `linear-gradient(rgba(0,255,135,0.04) 1px, transparent 1px),
-                         linear-gradient(90deg, rgba(0,255,135,0.04) 1px, transparent 1px)`,
+        'grid-pattern': `linear-gradient(hsl(158 64% 48% / 0.04) 1px, transparent 1px),
+                         linear-gradient(90deg, hsl(158 64% 48% / 0.04) 1px, transparent 1px)`,
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'hero-glow':     'radial-gradient(ellipse 80% 50% at 50% -20%,rgba(0,255,135,0.15),transparent)',
+        'hero-glow':     'radial-gradient(ellipse 80% 50% at 50% -20%,hsl(158 64% 48% / 0.12),transparent)',
       },
       backgroundSize: {
         'grid': '32px 32px',

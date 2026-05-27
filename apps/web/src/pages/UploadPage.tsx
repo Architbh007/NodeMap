@@ -344,7 +344,7 @@ function ZipForm({
         onDragLeave={() => setIsDragging(false)}
         onDrop={onDrop}
         className={cn(
-          'relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed p-10 transition-all duration-200',
+          'relative flex flex-col items-center justify-center rounded-xl border-2 border-border/80 p-10 transition-all duration-200 bg-card/30',
           isActive ? 'pointer-events-none opacity-60' : 'cursor-pointer',
           isDragging ? 'border-primary bg-primary/5 scale-[1.01]' : 'border-border hover:border-primary/50 hover:bg-secondary/30',
           file && !isActive && 'border-primary/50 bg-primary/5',
@@ -448,7 +448,7 @@ export function UploadPage() {
           </p>
           <h1 className="text-xl font-bold font-mono text-foreground">Analyze a Repository</h1>
           <p className="text-sm text-muted-foreground pt-0.5">
-            Paste a URL or upload a ZIP — NodeMap builds the full architecture map
+            Paste a URL or upload a ZIP. NodeMap builds the full architecture map.
           </p>
         </div>
 
@@ -481,7 +481,7 @@ export function UploadPage() {
             <div className="flex items-start gap-2.5 px-3 py-2.5 rounded-sm bg-secondary/40 border border-border text-xs text-muted-foreground font-mono">
               <Info className="w-3.5 h-3.5 text-primary/70 shrink-0 mt-0.5" />
               <span>
-                <span className="text-foreground">static analysis only</span> — code is never executed.
+                <span className="text-foreground">static analysis only</span>. Code is never executed.
                 node_modules, binaries and lock files are ignored.
               </span>
             </div>

@@ -131,7 +131,7 @@ export function LandingPage() {
         {/* Badge */}
         <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/30 bg-primary/10 text-xs text-primary mb-6 animate-fade-in">
           <Shield className="w-3 h-3" />
-          Static analysis — never executes your code
+          Static analysis. Never executes your code.
         </div>
 
         {/* Heading */}
@@ -144,7 +144,7 @@ export function LandingPage() {
         <p className="text-lg text-muted-foreground max-w-xl mb-10 leading-relaxed animate-fade-in">
           Transform any repository into an interactive architecture map.
           Visualize dependencies, detect risks, trace API flows, and understand
-          large codebases in minutes — not weeks.
+          large codebases in minutes, not weeks.
         </p>
 
         <div className="flex items-center gap-3 animate-fade-in">
@@ -170,7 +170,7 @@ export function LandingPage() {
               <div className="w-2.5 h-2.5 rounded-full bg-risk-medium" />
               <div className="w-2.5 h-2.5 rounded-full bg-risk-low" />
             </div>
-            <p className="text-xs text-muted-foreground text-center mb-4 font-mono">my-project — architecture map</p>
+            <p className="text-xs text-muted-foreground text-center mb-4">my-project · architecture map</p>
             <HeroGraphPreview />
           </div>
         </div>
@@ -195,7 +195,7 @@ export function LandingPage() {
             Everything you need to understand a codebase
           </h2>
           <p className="text-muted-foreground max-w-md mx-auto">
-            From high-level architecture to individual file dependencies — fully interactive.
+            From high-level architecture to individual file dependencies, fully interactive.
           </p>
         </div>
 
@@ -230,7 +230,7 @@ export function LandingPage() {
 
       <footer className="py-6 border-t border-border/50 text-center">
         <p className="text-xs text-muted-foreground">
-          NodeMap — Architecture Intelligence Platform &nbsp;·&nbsp; Static analysis only
+          NodeMap · Architecture Intelligence Platform · Static analysis only
         </p>
       </footer>
     </div>

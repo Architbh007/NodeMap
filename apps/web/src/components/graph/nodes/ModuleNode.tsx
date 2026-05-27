@@ -12,7 +12,7 @@ export const ModuleNode = memo(({ data, selected }: NodeProps) => {
       <Handle type="target" position={Position.Top} className="!bg-node-module !border-node-module/50 !w-2 !h-2" />
       <div
         className={cn(
-          'flex items-center gap-2 px-3 py-2 rounded-lg border border-dashed transition-all duration-200 cursor-pointer min-w-[140px]',
+          'flex items-center gap-2 px-3 py-2 rounded-lg border border-border/80 transition-all duration-200 cursor-pointer min-w-[140px]',
           'bg-card/50 border-node-module/30',
           'hover:border-node-module/60 hover:bg-node-module/5',
           selected && 'border-node-module bg-node-module/10',

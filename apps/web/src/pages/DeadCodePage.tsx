@@ -35,7 +35,7 @@ export function DeadCodePage() {
   };
 
   return (
-    <PageShell title="Dead Code Candidates" subtitle="Files that look unused — verify before deleting">
+    <PageShell title="Dead Code Candidates" subtitle="Files that look unused. Verify before deleting.">
       <div className="border border-border rounded-sm p-3 bg-secondary/10 flex items-start gap-2 text-xs font-mono">
         <AlertTriangle className="w-4 h-4 text-risk-medium shrink-0 mt-0.5" />
         <p className="text-muted-foreground">

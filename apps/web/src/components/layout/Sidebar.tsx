@@ -50,9 +50,8 @@ export function Sidebar() {
         className="h-12 flex items-center gap-2 px-4 border-b border-border text-primary hover:opacity-80 transition-opacity shrink-0"
       >
         <NetworkIcon />
-        <span className="font-mono font-semibold text-sm text-foreground tracking-tight">
-          node<span className="text-primary">map</span>
-          <span className="animate-cursor-blink text-primary select-none">_</span>
+        <span className="font-semibold text-sm text-foreground tracking-tight">
+          Node<span className="text-primary">Map</span>
         </span>
       </Link>
 
@@ -61,7 +60,7 @@ export function Sidebar() {
           const active = pathname === to || pathname.startsWith(`${to}/`);
           const disabled = needsRepo && !repoId;
           const className = cn(
-            'flex items-center gap-2.5 px-2.5 py-2 rounded-sm text-xs font-mono transition-colors',
+            'flex items-center gap-2.5 px-2.5 py-2 rounded-md text-sm transition-colors',
             active
               ? 'text-primary bg-primary/8'
               : disabled
@@ -89,7 +88,7 @@ export function Sidebar() {
       <div className="border-t border-border px-3 py-2 shrink-0">
         <Link
           to="/upload"
-          className="block text-center text-[11px] font-mono py-1.5 rounded-sm border border-primary/25 text-primary hover:bg-primary/8 hover:border-primary/50 transition-colors"
+          className="block text-center text-sm py-2 rounded-md border border-primary/25 text-primary hover:bg-primary/8 hover:border-primary/50 transition-colors"
         >
           + new analysis
         </Link>

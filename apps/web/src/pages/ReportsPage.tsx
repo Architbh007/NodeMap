@@ -90,7 +90,7 @@ export function ReportsPage() {
           {busy === 'json' ? 'preparing…' : 'Download JSON'}
         </button>
         <span className="text-[10px] font-mono text-muted-foreground self-center ml-auto flex items-center gap-1">
-          <FileDown className="w-3 h-3" /> reports are generated locally — no data leaves the server
+          <FileDown className="w-3 h-3" /> reports are generated locally. No data leaves the server.
         </span>
       </div>
 

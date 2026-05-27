@@ -32,9 +32,8 @@ export function Navbar() {
         className="flex items-center gap-2 shrink-0 text-primary hover:opacity-80 transition-opacity"
       >
         <NetworkIcon />
-        <span className="font-mono font-semibold text-sm text-foreground tracking-tight">
-          node<span className="text-primary">map</span>
-          <span className="animate-cursor-blink text-primary select-none">_</span>
+        <span className="font-semibold text-sm text-foreground tracking-tight">
+          Node<span className="text-primary">Map</span>
         </span>
       </Link>
 

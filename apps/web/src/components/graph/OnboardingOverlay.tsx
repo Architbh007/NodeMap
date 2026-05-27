@@ -9,12 +9,12 @@ const STEPS = [
   {
     icon: <MousePointer className="w-5 h-5 text-primary" />,
     title: 'Click to explore',
-    body: 'Use the Tree line view for a clean folder hierarchy — only direct children appear below each expanded folder. Switch to Imports, API, Circular, or All to overlay relationship lines. Click a file to inspect it in the right panel.',
+    body: 'Use the Tree line view for a clean folder hierarchy. Only direct children appear below each expanded folder. Switch to Imports, API, Circular, or All to overlay relationship lines. Click a file to inspect it in the right panel.',
   },
   {
     icon: <Search className="w-5 h-5 text-primary" />,
     title: 'Search anything',
-    body: 'Press / to open search. Type a filename, function name, or class — matching nodes highlight instantly. Click a result to jump to it.',
+    body: 'Press / to open search. Type a filename, function name, or class. Matching nodes highlight instantly. Click a result to jump to it.',
   },
   {
     icon: <GitMerge className="w-5 h-5 text-risk-critical" />,
@@ -29,7 +29,7 @@ const STEPS = [
   {
     icon: <BarChart2 className="w-5 h-5 text-primary" />,
     title: 'Impact analysis',
-    body: 'Select any file and scroll the right panel to see "Impact" — how many files would break if this one changed. Click to highlight them.',
+    body: 'Select any file and scroll the right panel to see "Impact": how many files would break if this one changed. Click to highlight them.',
   },
 ];
 

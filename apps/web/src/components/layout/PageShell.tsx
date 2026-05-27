@@ -15,12 +15,9 @@ export function PageShell({ title, subtitle, actions, children, fullBleed = fals
     <div className={fullBleed ? '' : 'max-w-7xl mx-auto px-6 py-6 space-y-5'}>
       {!fullBleed && (
         <div className="flex items-end justify-between gap-4">
-          <div className="space-y-0.5">
-            <p className="text-[11px] font-mono text-muted-foreground/70 flex items-center gap-1.5">
-              <span className="text-primary">$</span> nodemap/{title.toLowerCase().replace(/\s+/g, '-')}
-            </p>
-            <h1 className="text-xl font-bold font-mono text-foreground">{title}</h1>
-            {subtitle && <p className="text-xs text-muted-foreground font-mono">{subtitle}</p>}
+          <div className="space-y-1">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">{title}</h1>
+            {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
           </div>
           {actions && <div className="flex items-center gap-2">{actions}</div>}
         </div>
@@ -36,7 +33,7 @@ export function NoRepoState({ title, subtitle }: { title: string; subtitle?: str
       <GitBranch className="w-8 h-8 text-muted-foreground/40" />
       <h2 className="font-mono text-sm text-foreground">{title}</h2>
       {subtitle && <p className="text-xs text-muted-foreground font-mono max-w-md">{subtitle}</p>}
-      <Link to="/upload" className="mt-2 text-xs font-mono px-3 py-1.5 rounded-sm border border-primary/30 text-primary hover:bg-primary/8 transition-colors">
+      <Link to="/upload" className="mt-2 text-sm px-4 py-2 rounded-md border border-primary/30 text-primary hover:bg-primary/8 transition-colors">
         + analyze a repository
       </Link>
     </div>

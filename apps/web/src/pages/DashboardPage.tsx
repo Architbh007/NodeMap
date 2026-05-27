@@ -25,8 +25,8 @@ function StatCard({
     muted: 'text-foreground',
   };
   const body = (
-    <div className="border border-border rounded-sm px-4 py-3 hover:border-primary/30 transition-colors bg-secondary/10">
-      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">{label}</p>
+    <div className="border border-border/80 rounded-lg px-4 py-3 hover:border-primary/40 transition-colors bg-card/60 shadow-sm">
+      <p className="text-xs font-medium text-muted-foreground">{label}</p>
       <p className={cn('text-2xl font-mono font-bold mt-0.5', colorMap[accent ?? 'muted'])}>{value}</p>
       {hint && <p className="text-[11px] font-mono text-muted-foreground/70 mt-1">{hint}</p>}
     </div>
@@ -35,7 +35,7 @@ function StatCard({
 }
 
 function HealthRing({ score }: { score: number }) {
-  const color = score >= 80 ? '#00ff87' : score >= 60 ? '#fbbf24' : score >= 40 ? '#fb923c' : '#ef4444';
+  const color = score >= 80 ? '#34d399' : score >= 60 ? '#fbbf24' : score >= 40 ? '#fb923c' : '#ef4444';
   const circumference = 2 * Math.PI * 36;
   const offset = circumference - (score / 100) * circumference;
   return (
@@ -118,7 +118,7 @@ function DashboardForRepo({ analysis }: { analysis: RepoAnalysis }) {
         <StatCard label="Circular deps" value={cycleCount} accent={cycleCount > 0 ? 'critical' : 'muted'} />
         <StatCard label="Dead code candidates" value={analysis.deadCodeCandidates.length} hint={`${deadHigh} high confidence`} to="/dead-code" />
         <StatCard label="Medium risk" value={analysis.mediumRiskCount} accent={analysis.mediumRiskCount > 0 ? 'warn' : 'muted'} />
-        <StatCard label="Languages" value={analysis.languages.length} hint={analysis.languages.slice(0, 2).join(', ') || '—'} />
+        <StatCard label="Languages" value={analysis.languages.length} hint={analysis.languages.slice(0, 2).join(', ') || 'None'} />
       </div>
 
       {/* Detail cards */}
@@ -181,7 +181,7 @@ function DashboardForRepo({ analysis }: { analysis: RepoAnalysis }) {
         </p>
         {cycleCount > 0 ? (
           <p className="text-xs font-mono text-risk-critical">
-            ⚠ {cycleCount} circular dependency group{cycleCount > 1 ? 's' : ''} — break these to make refactors safer.
+            ⚠ {cycleCount} circular dependency group{cycleCount > 1 ? 's' : ''}. Break these to make refactors safer.
           </p>
         ) : (
           <p className="text-xs font-mono text-primary">✓ No circular dependencies detected</p>

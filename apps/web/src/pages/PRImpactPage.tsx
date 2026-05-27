@@ -69,15 +69,15 @@ export function PRImpactPage() {
   return (
     <PageShell
       title="PR Impact"
-      subtitle="Blast-radius analysis — what depends on changed files and which endpoints are affected"
+      subtitle="Blast-radius analysis: what depends on changed files and which endpoints are affected"
     >
       <div className="border border-border rounded-sm p-4 space-y-4 bg-secondary/10">
         <div className="flex items-start gap-2">
           <GitPullRequest className="w-4 h-4 text-primary mt-0.5 shrink-0" />
           <div className="flex-1 space-y-1">
-            <h3 className="text-sm font-mono text-foreground">PR risk radar — not a code reviewer</h3>
+            <h3 className="text-sm font-medium text-foreground">PR risk radar, not a code reviewer</h3>
             <p className="text-xs font-mono text-muted-foreground leading-relaxed">
-              GitHub shows <em>what</em> changed. NodeMap shows <em>what else could break</em> — direct/indirect
+              GitHub shows <em>what</em> changed. NodeMap shows <em>what else could break</em>: direct and indirect
               dependents and affected HTTP routes from your ingested dependency graph.
             </p>
           </div>
