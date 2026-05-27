@@ -11,13 +11,6 @@ import { cn } from '@/lib/utils';
 import type { AiNodeExplain, AiRepoBrief } from '@nodemap/types';
 import { TUNNER } from '@/constants/tunner';
 
-/** Suggestion chips shown above the file list */
-const SUGGESTIONS = [
-  'Explain the risk in auth.ts',
-  'Find circular deps',
-  'Suggest refactor',
-];
-
 export function AIExplainerPage() {
   const { repoId } = useActiveRepo();
   const { data: analysis, isLoading, error } = useAnalysis(repoId ?? undefined);
@@ -67,7 +60,7 @@ export function AIExplainerPage() {
     } finally { setBusy(false); }
   }
 
-  if (!repoId) return <PageShell title={TUNNER.name}><NoRepoState title="No repository selected" /></PageShell>;
+  if (!repoId) return <PageShell title={TUNNER.name}><NoRepoState /></PageShell>;
   if (isLoading) return <PageLoading label="Loading analysis…" />;
   if (error) return <PageShell title={TUNNER.name}><PageError error={error} /></PageShell>;
 
@@ -102,18 +95,6 @@ export function AIExplainerPage() {
             <IconSparkles size={15} />
             {TUNNER.briefAction}
           </button>
-
-          {/* Suggestion chips */}
-          <div className="flex flex-wrap gap-1.5">
-            {SUGGESTIONS.map((s) => (
-              <button
-                key={s}
-                className="h-7 px-2.5 rounded-full text-[11px] font-medium bg-[#EFF6FF] text-[#2563EB] border border-[#BFDBFE] hover:bg-[#DBEAFE] transition-colors"
-              >
-                {s}
-              </button>
-            ))}
-          </div>
 
           {/* File search + list */}
           <StudioCard className="overflow-hidden">

@@ -36,7 +36,7 @@ export function RepoGraphPage() {
   useEffect(() => () => { reset(); }, [reset]);
 
   if (!repoId) {
-    return <div className="px-6 py-6"><NoRepoState title="No repository selected" subtitle="Pick a repository in the top bar to explore its structure." /></div>;
+    return <div className="px-6 py-6"><NoRepoState /></div>;
   }
   if (isLoading) return <PageLoading label="Loading graph…" />;
   if (error) return <div className="px-6 py-6"><PageError error={error} /></div>;

@@ -1,15 +1,12 @@
 import { rmSync, existsSync } from 'fs';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import type { Repository, ApiResponse, PaginatedResponse } from '@nodemap/types';
 import { dbAll, dbGet, dbRun } from '../storage/db.js';
 import { generateId, now } from '../utils/id.js';
+import { UPLOADS_DIR } from '../services/ingestion.js';
 import type { RepositoryRow } from '../types/index.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const UPLOADS_DIR = path.resolve(__dirname, '../../uploads');
 
 function rowToRepo(row: RepositoryRow): Repository {
   return {

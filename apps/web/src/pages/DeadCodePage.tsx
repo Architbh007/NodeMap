@@ -24,7 +24,7 @@ export function DeadCodePage() {
     return analysis.deadCodeCandidates.filter((c) => c.confidence === filter);
   }, [analysis, filter]);
 
-  if (!repoId) return <PageShell title="Dead Code"><NoRepoState title="No repository selected" /></PageShell>;
+  if (!repoId) return <PageShell title="Dead Code"><NoRepoState /></PageShell>;
   if (isLoading) return <PageLoading label="Looking for unreferenced files…" />;
   if (error) return <PageShell title="Dead Code"><PageError error={error} /></PageShell>;
   if (!analysis) return null;

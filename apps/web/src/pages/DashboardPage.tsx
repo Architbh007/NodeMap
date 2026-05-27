@@ -15,7 +15,6 @@ import { formatBytes, formatRelativeTime } from '@nodemap/shared';
 import { cn } from '@/lib/utils';
 import type { RepoAnalysis } from '@nodemap/types';
 
-// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function riskBadgeClass(level: string) {
   const m: Record<string, string> = {
@@ -27,8 +26,7 @@ function riskBadgeClass(level: string) {
   return m[level] ?? 'badge-low';
 }
 
-// ── Health Ring ───────────────────────────────────────────────────────────────
-
+// Health Ring
 function HealthRing({ score }: { score: number }) {
   const strokeColor = score >= 80 ? '#059669' : score >= 60 ? '#D97706' : '#DC2626';
   const circumference = 2 * Math.PI * 34;
@@ -58,8 +56,7 @@ function HealthRing({ score }: { score: number }) {
   );
 }
 
-// ── KPI Card ──────────────────────────────────────────────────────────────────
-
+// KPI Card
 interface KpiCardProps {
   label: string;
   value: string | number;
@@ -96,8 +93,7 @@ function KpiCard({ label, value, hint, color = 'neutral', to, icon: Icon }: KpiC
   ) : inner;
 }
 
-// ── Risk Distribution ─────────────────────────────────────────────────────────
-
+// Risk Distribution
 function RiskDistribution({ analysis }: { analysis: RepoAnalysis }) {
   const total = analysis.riskScores.length;
   const counts = {
@@ -133,8 +129,7 @@ function RiskDistribution({ analysis }: { analysis: RepoAnalysis }) {
   );
 }
 
-// ── Endpoint method bar ───────────────────────────────────────────────────────
-
+// Endpoint method bar
 function MethodBar({ counts }: { counts: RepoAnalysis['endpointsByMethod'] }) {
   const total = Object.values(counts).reduce((s, v) => s + v, 0);
   if (total === 0) {
@@ -163,8 +158,7 @@ function MethodBar({ counts }: { counts: RepoAnalysis['endpointsByMethod'] }) {
   );
 }
 
-// ── Main dashboard for a loaded repo ─────────────────────────────────────────
-
+// Main dashboard for a loaded repo
 function DashboardForRepo({ analysis }: { analysis: RepoAnalysis }) {
   const topRisk = analysis.riskScores.slice(0, 6);
   const cycleCount = analysis.dependencies.circular.length;
@@ -193,17 +187,6 @@ function DashboardForRepo({ analysis }: { analysis: RepoAnalysis }) {
             ))}
             <span className="text-[12px] text-[#9CA3AF]">{formatBytes(analysis.totalSize)}</span>
           </div>
-        </div>
-        {/* Health pill */}
-        <div className={cn(
-          'shrink-0 px-3 py-1.5 rounded-full text-[12px] font-medium border',
-          analysis.healthScore >= 80
-            ? 'bg-[#ECFDF5] text-[#065F46] border-[#A7F3D0]'
-            : analysis.healthScore >= 60
-              ? 'bg-[#FFFBEB] text-[#92400E] border-[#FDE68A]'
-              : 'bg-[#FEF2F2] text-[#991B1B] border-[#FECACA]',
-        )}>
-          Health {analysis.healthScore}/100
         </div>
       </StudioCard>
 
@@ -285,8 +268,7 @@ function DashboardForRepo({ analysis }: { analysis: RepoAnalysis }) {
   );
 }
 
-// ── Repo list ─────────────────────────────────────────────────────────────────
-
+// Repo list
 function RepoList() {
   const { data, isLoading, error } = useRepositories();
   const { mutate: deleteRepo } = useDeleteRepository();
@@ -369,8 +351,7 @@ function RepoList() {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
+// Page
 export function DashboardPage() {
   const { repoId } = useActiveRepo();
   const { data: repo } = useRepository(repoId ?? undefined);
@@ -379,10 +360,7 @@ export function DashboardPage() {
   return (
     <PageShell>
       {!repoId && (
-        <NoRepoState
-          title="No repository selected"
-          subtitle="Analyze a repository to see architecture intelligence here."
-        />
+        <NoRepoState />
       )}
 
       {repoId && isLoading && <PageLoading label="Building analysis…" />}

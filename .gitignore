@@ -24,3 +24,11 @@ packages/*/dist/
 
 # pnpm
 .pnpm-store/
+
+# Crash dumps
+*.stackdump
+
+# AI tooling — not relevant to contributors
+CLAUDE.md
+PROGRESS.md
+.claude/

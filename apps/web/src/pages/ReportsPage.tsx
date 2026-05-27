@@ -54,7 +54,7 @@ export function ReportsPage() {
     }
   }
 
-  if (!repoId) return <PageShell title="Reports"><NoRepoState title="No repository selected" /></PageShell>;
+  if (!repoId) return <PageShell title="Reports"><NoRepoState /></PageShell>;
 
   return (
     <PageShell title="Reports" subtitle="Export architecture intelligence as Markdown or JSON">

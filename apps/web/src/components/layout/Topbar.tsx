@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, Link } from 'react-router-dom';
 import { ChevronDown, Check, GitBranch, Plus } from 'lucide-react';
-import { IconRefresh, IconDownload } from '@tabler/icons-react';
 import { useRepositories } from '@/hooks/useRepository';
 import { useActiveRepo } from '@/store/activeRepoStore';
 import { cn } from '@/lib/utils';

@@ -61,7 +61,7 @@ export function PRImpactPage() {
     } finally { setBusy(false); }
   }
 
-  if (!repoId) return <PageShell title="PR Impact"><NoRepoState title="No repository selected" /></PageShell>;
+  if (!repoId) return <PageShell title="PR Impact"><NoRepoState /></PageShell>;
 
   return (
     <PageShell title="PR Impact" subtitle="Blast-radius analysis: what depends on changed files and which endpoints are affected">

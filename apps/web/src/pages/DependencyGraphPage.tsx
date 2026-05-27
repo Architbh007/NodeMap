@@ -47,7 +47,7 @@ export function DependencyGraphPage() {
   });
 
   if (!repoId) {
-    return <div className="px-6 py-6"><NoRepoState title="No repository selected" subtitle="Choose a repository above to view its dependency graph." /></div>;
+    return <div className="px-6 py-6"><NoRepoState /></div>;
   }
   if (aLoading || gLoading) return <PageLoading label="Loading dependency graph…" />;
   if (aErr || gErr) return <div className="px-6 py-6"><PageError error={aErr ?? gErr} /></div>;

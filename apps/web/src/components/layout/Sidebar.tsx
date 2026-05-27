@@ -62,19 +62,6 @@ function LogoIcon() {
   );
 }
 
-/** Avatar placeholder */
-function Avatar({ name }: { name: string }) {
-  const initials = name
-    .split(' ')
-    .slice(0, 2)
-    .map((w) => w[0]?.toUpperCase() ?? '')
-    .join('');
-  return (
-    <div className="w-6 h-6 rounded-full bg-[#EFF6FF] border border-[#BFDBFE] flex items-center justify-center shrink-0">
-      <span className="text-[#2563EB] text-[9px] font-semibold">{initials}</span>
-    </div>
-  );
-}
 
 export function Sidebar() {
   const { pathname } = useLocation();
@@ -161,13 +148,9 @@ export function Sidebar() {
         </Link>
       </div>
 
-      {/* Bottom avatar */}
-      <div className="px-3 py-3 border-t border-[#E4E7EC] flex items-center gap-2.5 shrink-0">
-        <Avatar name="Dev User" />
-        <div className="min-w-0">
-          <p className="text-[12px] font-medium text-[#111827] truncate leading-none">Dev User</p>
-          <p className="text-[10px] text-[#9CA3AF] truncate mt-0.5">Local workspace</p>
-        </div>
+      {/* Footer */}
+      <div className="px-3.5 py-3 border-t border-[#E4E7EC] shrink-0">
+        <p className="text-[10px] text-[#C4C9D4]">NodeMap · open source</p>
       </div>
     </aside>
   );

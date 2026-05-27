@@ -50,7 +50,7 @@ export function EndpointMapPage() {
   if (!repoId) {
     return (
       <PageShell title="Endpoint Map" subtitle="API request → response flow">
-        <NoRepoState title="No repository selected" subtitle="Pick a repository in the top bar." />
+        <NoRepoState />
       </PageShell>
     );
   }

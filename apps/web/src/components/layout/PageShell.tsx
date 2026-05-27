@@ -47,7 +47,13 @@ export function PageShell({
   );
 }
 
-export function NoRepoState({ title, subtitle }: { title: string; subtitle?: string }) {
+export function NoRepoState({
+  title    = 'No repository selected',
+  subtitle = 'Select one from the top bar, or analyze a new repo to get started.',
+}: {
+  title?: string;
+  subtitle?: string;
+}) {
   return (
     <div className="flex flex-col items-center justify-center py-24 text-center space-y-3">
       <div className="w-12 h-12 rounded-xl bg-[#EFF6FF] flex items-center justify-center">
@@ -55,9 +61,7 @@ export function NoRepoState({ title, subtitle }: { title: string; subtitle?: str
       </div>
       <div>
         <h2 className="text-[15px] font-medium text-[#111827]">{title}</h2>
-        {subtitle && (
-          <p className="text-[13px] text-[#6B7280] mt-1 max-w-sm">{subtitle}</p>
-        )}
+        <p className="text-[13px] text-[#6B7280] mt-1 max-w-sm">{subtitle}</p>
       </div>
       <Link
         to="/upload"

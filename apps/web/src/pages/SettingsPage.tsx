@@ -11,8 +11,7 @@ import { PageShell, PageError, PageLoading, StudioCard } from '@/components/layo
 import { cn } from '@/lib/utils';
 import type { AiProviderId, UpdateSettingsInput } from '@nodemap/types';
 
-// ── Sub-components ────────────────────────────────────────────────────────────
-
+// Sub-components
 function SettingsSection({
   icon: Icon,
   title,
@@ -58,8 +57,7 @@ function TestStatusIcon({ status }: { status: TestState }) {
   return null;
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
+// Page
 export function SettingsPage() {
   const qc = useQueryClient();
   const { data: res, isLoading, error } = useQuery({

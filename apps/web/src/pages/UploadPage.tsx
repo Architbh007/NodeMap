@@ -21,8 +21,7 @@ const MAX_FILE_SIZE = 100 * 1024 * 1024;
 type Mode = 'url' | 'zip';
 type Phase = 'idle' | 'uploading' | 'analyzing' | 'done' | 'error';
 
-// ─── Shared results view ──────────────────────────────────
-
+// Shared results view
 function StatCard({ icon, label, value, color }: {
   icon: React.ReactNode; label: string; value: string | number; color: string;
 }) {
@@ -105,8 +104,7 @@ function AnalysisResults({
   );
 }
 
-// ─── URL mode ─────────────────────────────────────────────
-
+// URL mode
 function ProviderIcon({ provider }: { provider: string }) {
   if (provider === 'github') return <Github className="w-4 h-4" />;
   return <Globe className="w-4 h-4" />;
@@ -285,8 +283,7 @@ function UrlForm({
   );
 }
 
-// ─── ZIP mode ─────────────────────────────────────────────
-
+// ZIP mode
 function ZipForm({
   onDone,
 }: {
@@ -421,8 +418,7 @@ function ZipForm({
   );
 }
 
-// ─── Main page ────────────────────────────────────────────
-
+// Main page
 export function UploadPage() {
   const [mode, setMode] = useState<Mode>('url');
   const [result, setResult] = useState<IngestionResult | null>(null);

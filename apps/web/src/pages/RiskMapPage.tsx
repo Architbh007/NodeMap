@@ -60,7 +60,7 @@ export function RiskMapPage() {
     }
   }
 
-  if (!repoId) return <PageShell title="Risk Map"><NoRepoState title="No repository selected" /></PageShell>;
+  if (!repoId) return <PageShell title="Risk Map"><NoRepoState /></PageShell>;
   if (isLoading) return <PageLoading label="Scoring risks…" />;
   if (error) return <PageShell title="Risk Map"><PageError error={error} /></PageShell>;
   if (!analysis) return null;
