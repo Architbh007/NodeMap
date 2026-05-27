@@ -4,27 +4,30 @@
 
 @layer base {
   :root {
-    --background:           222 18% 7%;
-    --foreground:           220 12% 93%;
-    --surface:              222 16% 9%;
-    --card:                 222 16% 10%;
-    --card-foreground:      220 12% 93%;
-    --popover:              222 16% 11%;
-    --popover-foreground:   220 12% 93%;
-    --primary:              158 64% 48%;
-    --primary-foreground:   160 100% 6%;
-    --secondary:            222 14% 14%;
-    --secondary-foreground: 220 12% 93%;
-    --muted:                222 14% 14%;
-    --muted-foreground:     220 8% 52%;
-    --accent:               199 80% 52%;
-    --accent-foreground:    200 100% 8%;
-    --destructive:          0 72% 55%;
+    /* ── Studio Light Theme ─────────────────────────────── */
+    --background:           220 14% 98%;   /* #F8F9FB */
+    --foreground:           222 39% 11%;   /* #111827 */
+    --surface:              0 0% 100%;     /* #FFFFFF */
+    --card:                 0 0% 100%;     /* #FFFFFF */
+    --card-foreground:      222 39% 11%;   /* #111827 */
+    --popover:              0 0% 100%;
+    --popover-foreground:   222 39% 11%;
+    --primary:              221 83% 53%;   /* #2563EB */
+    --primary-foreground:   0 0% 100%;
+    --secondary:            220 13% 96%;   /* light gray surface */
+    --secondary-foreground: 222 39% 11%;
+    --muted:                220 13% 96%;
+    --muted-foreground:     220 9% 46%;    /* #6B7280 */
+    --accent:               214 100% 97%; /* #EFF6FF */
+    --accent-foreground:    221 83% 53%;   /* #2563EB */
+    --destructive:          0 72% 51%;     /* #DC2626 */
     --destructive-foreground: 0 0% 100%;
-    --border:               222 12% 16%;
-    --input:                222 12% 16%;
-    --ring:                 158 64% 48%;
+    --border:               216 12% 91%;   /* #E4E7EC */
+    --input:                216 12% 91%;
+    --ring:                 221 83% 53%;
     --radius:               0.5rem;
+    --sidebar:              0 0% 100%;     /* #FFFFFF */
+    --topbar:               0 0% 100%;     /* #FFFFFF */
   }
 }
 
@@ -34,33 +37,35 @@
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
   }
 }
 
 /* Scrollbar */
 ::-webkit-scrollbar              { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track        { background: transparent; }
-::-webkit-scrollbar-thumb        { background: hsl(var(--border)); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover  { background: hsl(var(--muted-foreground) / 0.5); }
+::-webkit-scrollbar-thumb        { background: hsl(216 12% 82%); border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover  { background: hsl(220 9% 65%); }
 
 /* ─── React Flow ─────────────────────────────────────── */
 .react-flow__renderer            { border-radius: 0; }
-.react-flow__background          { background: hsl(var(--background)) !important; }
+.react-flow__background          { background: hsl(220 14% 97%) !important; }
 
 .react-flow__minimap {
   background: hsl(var(--card)) !important;
   border: 1px solid hsl(var(--border)) !important;
-  border-radius: calc(var(--radius) + 2px) !important;
+  border-radius: 8px !important;
   overflow: hidden;
 }
 .react-flow__minimap-mask        { fill: hsl(var(--background) / 0.7) !important; }
-.react-flow__minimap-node        { fill: hsl(var(--primary) / 0.5) !important; }
+.react-flow__minimap-node        { fill: hsl(var(--primary) / 0.4) !important; }
 
 .react-flow__controls {
   background: hsl(var(--card)) !important;
   border: 1px solid hsl(var(--border)) !important;
-  border-radius: var(--radius) !important;
-  box-shadow: none !important;
+  border-radius: 8px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08) !important;
   gap: 1px;
 }
 .react-flow__controls-button {
@@ -78,43 +83,95 @@
   color: hsl(var(--primary)) !important;
 }
 .react-flow__controls-button svg { width: 12px; height: 12px; }
-
 .react-flow__edge-path           { stroke-width: 1.5; }
 .react-flow__attribution         { display: none; }
 
-/* ─── Utility classes ────────────────────────────────── */
+/* ─── Glass / elevated surface ──────────────────────── */
+/* Legacy "glass" class from the dark theme, redefined for Studio Light.
+   Solid white card with elevation shadow — no backdrop-blur, which looks
+   cheap in light mode and bleeds through in a way that hurts readability. */
 .glass {
-  background: hsl(var(--card) / 0.92);
-  backdrop-filter: blur(16px);
-  border: 1px solid hsl(var(--border) / 0.8);
-  box-shadow: 0 4px 24px hsl(0 0% 0% / 0.25);
+  background: #ffffff;
+  box-shadow:
+    0 0 0 1px hsl(216 12% 91% / 0.8),   /* subtle border-ring     */
+    0 4px 24px rgba(0, 0, 0, 0.07),      /* medium lift            */
+    0 1px 4px  rgba(0, 0, 0, 0.04);      /* tight contact shadow   */
 }
 
-.gradient-text {
-  background: linear-gradient(135deg, hsl(158 64% 52%) 0%, hsl(199 80% 55%) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+/* ─── Studio utility classes ─────────────────────────── */
+/* Card / Panel */
+.studio-card {
+  @apply bg-white border border-[#E4E7EC] rounded-lg;
 }
 
-.glow-primary  { box-shadow: 0 0 24px hsl(var(--primary) / 0.2); }
-.glow-accent   { box-shadow: 0 0 24px hsl(var(--accent) / 0.2); }
+/* Muted label (uppercase micro-text) */
+.studio-label {
+  @apply text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em];
+}
 
-.node-selected { box-shadow: 0 0 0 2px hsl(var(--primary)), 0 0 20px hsl(var(--primary) / 0.3); }
+/* Primary button */
+.btn-primary {
+  @apply bg-[#2563EB] hover:bg-[#1D4ED8] text-white text-[13px] font-medium
+         px-3 py-[5px] rounded-md transition-colors cursor-pointer;
+}
 
-/* ─── React Flow node position transitions ───────────── */
-/* Smooth slide when dagre re-layouts (expand/collapse) */
+/* Secondary button */
+.btn-secondary {
+  @apply bg-white hover:bg-[#F8F9FB] text-[#374151] text-[13px] font-medium
+         border border-[#E4E7EC] px-3 py-[5px] rounded-md transition-colors cursor-pointer;
+}
+
+/* Sidebar nav item */
+.sidebar-item {
+  @apply flex items-center gap-2.5 h-8 px-2.5 text-[13px] text-[#6B7280]
+         rounded-lg transition-all cursor-pointer;
+}
+.sidebar-item:hover {
+  @apply bg-[#F8F9FB] text-[#111827];
+}
+.sidebar-item.active {
+  @apply bg-[#EFF6FF] text-[#1D4ED8] border-l-2 border-[#2563EB] rounded-l-none;
+}
+
+/* Risk badges */
+.badge-critical { @apply bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] text-[10px] font-medium px-1.5 py-0.5 rounded-[4px]; }
+.badge-high     { @apply bg-[#FEF3C7] text-[#92400E] border border-[#FDE68A] text-[10px] font-medium px-1.5 py-0.5 rounded-[4px]; }
+.badge-medium   { @apply bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE] text-[10px] font-medium px-1.5 py-0.5 rounded-[4px]; }
+.badge-low      { @apply bg-[#F0FDF4] text-[#166534] border border-[#BBF7D0] text-[10px] font-medium px-1.5 py-0.5 rounded-[4px]; }
+
+/* HTTP method badges */
+.badge-GET    { @apply bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0] text-[10px] font-medium px-1.5 py-0.5 rounded-[4px]; }
+.badge-POST   { @apply bg-[#FFFBEB] text-[#92400E] border border-[#FDE68A] text-[10px] font-medium px-1.5 py-0.5 rounded-[4px]; }
+.badge-PUT    { @apply bg-[#EFF6FF] text-[#1D4ED8] border border-[#BFDBFE] text-[10px] font-medium px-1.5 py-0.5 rounded-[4px]; }
+.badge-PATCH  { @apply bg-[#F5F3FF] text-[#5B21B6] border border-[#DDD6FE] text-[10px] font-medium px-1.5 py-0.5 rounded-[4px]; }
+.badge-DELETE { @apply bg-[#FEF2F2] text-[#991B1B] border border-[#FECACA] text-[10px] font-medium px-1.5 py-0.5 rounded-[4px]; }
+.badge-OPTIONS { @apply bg-[#F5F3FF] text-[#5B21B6] border border-[#DDD6FE] text-[10px] font-medium px-1.5 py-0.5 rounded-[4px]; }
+.badge-HEAD   { @apply bg-[#F3F4F6] text-[#374151] border border-[#E5E7EB] text-[10px] font-medium px-1.5 py-0.5 rounded-[4px]; }
+
+/* Progress bar */
+.progress-track { @apply h-[5px] rounded-[3px] bg-[#F3F4F6] overflow-hidden; }
+.progress-fill  { @apply h-full rounded-[3px] transition-all; }
+
+/* Studio form input */
+.studio-input {
+  @apply w-full bg-white border border-[#E4E7EC] rounded-md px-3 py-2
+         text-[13px] text-[#111827] placeholder:text-[#9CA3AF]
+         focus:outline-none focus:ring-2 focus:ring-[#2563EB]/20 focus:border-[#2563EB]
+         transition-colors;
+}
+
+/* ─── React Flow node transitions ───────────────────── */
 .react-flow__node {
   transition: transform 220ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ─── Animations ─────────────────────────────────────── */
+/* ─── Shimmer animation ─────────────────────────────── */
 @keyframes shimmer-slide {
   0%   { background-position: -200% 0; }
   100% { background-position:  200% 0; }
 }
 .shimmer-bg {
-  background: linear-gradient(90deg, transparent 0%, hsl(var(--primary) / 0.05) 50%, transparent 100%);
+  background: linear-gradient(90deg, transparent 0%, hsl(var(--primary) / 0.04) 50%, transparent 100%);
   background-size: 200% 100%;
   animation: shimmer-slide 2s linear infinite;
 }

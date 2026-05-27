@@ -4,9 +4,12 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { SCHEMA_SQL, MIGRATIONS } from './schema.js';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DATA_DIR = path.resolve(__dirname, '../../data');
-const DB_PATH = path.join(DATA_DIR, 'nodemap.db');
+// DATA_DIR: prefer explicit env var, then fall back to <cwd>/data.
+// This is safe for both dev (cwd = monorepo root) and Docker (WORKDIR /app).
+// We do NOT use __dirname because tsup bundles everything into dist/index.js
+// and the relative path would resolve to the wrong location.
+const DATA_DIR = process.env.DATA_DIR ?? path.join(process.cwd(), 'data');
+const DB_PATH  = path.join(DATA_DIR, 'nodemap.db');
 
 let _db: Database | null = null;
 let _inTransaction = false;

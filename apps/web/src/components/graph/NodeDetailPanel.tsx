@@ -82,7 +82,9 @@ export function NodeDetailPanel() {
     .filter(Boolean);
 
   return (
-    <aside className="absolute right-0 top-0 bottom-0 w-72 glass border-l border-border flex flex-col z-10 animate-fade-in">
+    <aside className="absolute right-0 top-0 bottom-0 w-72 flex flex-col z-20 animate-fade-in"
+      style={{ background: '#ffffff', borderLeft: '1px solid #E4E7EC', boxShadow: '-4px 0 24px rgba(0,0,0,0.08), -1px 0 4px rgba(0,0,0,0.04)' }}
+    >
       {/* Header */}
       <div className="flex items-start justify-between p-4 border-b border-border">
         <div className="flex items-start gap-2.5 min-w-0">

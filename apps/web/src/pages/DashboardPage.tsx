@@ -1,50 +1,45 @@
 import { Link } from 'react-router-dom';
 import {
-  FileCode, Layers, Workflow, Flame, Trash2, AlertTriangle,
-  CircleDashed, Activity, Plus,
+  Activity, FileCode, Layers, Trash2, Plus,
+  AlertTriangle, GitBranch,
 } from 'lucide-react';
+import {
+  IconFlame, IconRoute, IconRefresh, IconExternalLink,
+  IconChevronRight,
+} from '@tabler/icons-react';
 import { useActiveRepo } from '@/store/activeRepoStore';
 import { useAnalysis } from '@/hooks/useAnalysis';
 import { useRepository, useRepositories, useDeleteRepository } from '@/hooks/useRepository';
-import { PageShell, NoRepoState, PageError, PageLoading } from '@/components/layout/PageShell';
+import { PageShell, NoRepoState, PageError, PageLoading, StudioCard } from '@/components/layout/PageShell';
 import { formatBytes, formatRelativeTime } from '@nodemap/shared';
 import { cn } from '@/lib/utils';
 import type { RepoAnalysis } from '@nodemap/types';
 
-function StatCard({
-  label, value, hint, accent, to,
-}: {
-  label: string; value: string | number; hint?: string;
-  accent?: 'primary' | 'critical' | 'warn' | 'muted';
-  to?: string;
-}) {
-  const colorMap: Record<string, string> = {
-    primary: 'text-primary',
-    critical: 'text-risk-critical',
-    warn: 'text-risk-medium',
-    muted: 'text-foreground',
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function riskBadgeClass(level: string) {
+  const m: Record<string, string> = {
+    critical: 'badge-critical',
+    high:     'badge-high',
+    medium:   'badge-medium',
+    low:      'badge-low',
   };
-  const body = (
-    <div className="border border-border/80 rounded-lg px-4 py-3 hover:border-primary/40 transition-colors bg-card/60 shadow-sm">
-      <p className="text-xs font-medium text-muted-foreground">{label}</p>
-      <p className={cn('text-2xl font-mono font-bold mt-0.5', colorMap[accent ?? 'muted'])}>{value}</p>
-      {hint && <p className="text-[11px] font-mono text-muted-foreground/70 mt-1">{hint}</p>}
-    </div>
-  );
-  return to ? <Link to={to}>{body}</Link> : body;
+  return m[level] ?? 'badge-low';
 }
 
+// ── Health Ring ───────────────────────────────────────────────────────────────
+
 function HealthRing({ score }: { score: number }) {
-  const color = score >= 80 ? '#34d399' : score >= 60 ? '#fbbf24' : score >= 40 ? '#fb923c' : '#ef4444';
-  const circumference = 2 * Math.PI * 36;
+  const strokeColor = score >= 80 ? '#059669' : score >= 60 ? '#D97706' : '#DC2626';
+  const circumference = 2 * Math.PI * 34;
   const offset = circumference - (score / 100) * circumference;
   return (
-    <div className="relative w-24 h-24 shrink-0">
-      <svg viewBox="0 0 80 80" className="-rotate-90">
-        <circle cx="40" cy="40" r="36" stroke="#222" strokeWidth="6" fill="none" />
+    <div className="relative w-[80px] h-[80px] shrink-0">
+      <svg viewBox="0 0 76 76" className="-rotate-90 w-full h-full">
+        <circle cx="38" cy="38" r="34" stroke="#E4E7EC" strokeWidth="6" fill="none" />
         <circle
-          cx="40" cy="40" r="36"
-          stroke={color}
+          cx="38" cy="38" r="34"
+          stroke={strokeColor}
           strokeWidth="6"
           fill="none"
           strokeDasharray={circumference}
@@ -54,142 +49,243 @@ function HealthRing({ score }: { score: number }) {
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-2xl font-mono font-bold tabular-nums" style={{ color }}>{score}</span>
-        <span className="text-[9px] font-mono uppercase text-muted-foreground/60 tracking-widest">health</span>
+        <span className="text-[18px] font-semibold tabular-nums text-[#111827]" style={{ color: strokeColor }}>
+          {score}
+        </span>
+        <span className="text-[9px] uppercase tracking-widest text-[#9CA3AF] leading-none mt-0.5">health</span>
       </div>
     </div>
   );
 }
 
-function MethodBar({ counts }: { counts: RepoAnalysis['endpointsByMethod'] }) {
-  const total = Object.values(counts).reduce((s, v) => s + v, 0);
-  if (total === 0) return <p className="text-xs text-muted-foreground font-mono">No endpoints detected</p>;
-  const colors: Record<string, string> = {
-    GET: 'bg-blue-500/70', POST: 'bg-green-500/70', PUT: 'bg-yellow-500/70',
-    PATCH: 'bg-orange-500/70', DELETE: 'bg-red-500/70', OPTIONS: 'bg-purple-500/70', HEAD: 'bg-gray-500/70',
+// ── KPI Card ──────────────────────────────────────────────────────────────────
+
+interface KpiCardProps {
+  label: string;
+  value: string | number;
+  hint?: string;
+  color?: 'blue' | 'red' | 'amber' | 'neutral';
+  to?: string;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon: React.ComponentType<any>;
+}
+
+function KpiCard({ label, value, hint, color = 'neutral', to, icon: Icon }: KpiCardProps) {
+  const colorMap = {
+    blue:    { icon: 'text-[#2563EB]', num: 'text-[#2563EB]', bg: 'bg-[#EFF6FF]' },
+    red:     { icon: 'text-[#DC2626]', num: 'text-[#DC2626]', bg: 'bg-[#FEF2F2]' },
+    amber:   { icon: 'text-[#D97706]', num: 'text-[#D97706]', bg: 'bg-[#FFFBEB]' },
+    neutral: { icon: 'text-[#6B7280]', num: 'text-[#111827]', bg: 'bg-[#F3F4F6]' },
+  }[color];
+
+  const inner = (
+    <div className="bg-white border border-[#E4E7EC] rounded-lg px-4 py-4 hover:border-[#BFDBFE] transition-colors group">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-[11px] font-medium text-[#6B7280] uppercase tracking-[0.06em]">{label}</p>
+        <div className={`w-7 h-7 rounded-lg ${colorMap.bg} flex items-center justify-center`}>
+          <Icon size={14} className={colorMap.icon} />
+        </div>
+      </div>
+      <p className={`text-[22px] font-medium tabular-nums ${colorMap.num}`}>{value}</p>
+      {hint && <p className="text-[11px] text-[#9CA3AF] mt-1">{hint}</p>}
+    </div>
+  );
+
+  return to ? (
+    <Link to={to} className="block">{inner}</Link>
+  ) : inner;
+}
+
+// ── Risk Distribution ─────────────────────────────────────────────────────────
+
+function RiskDistribution({ analysis }: { analysis: RepoAnalysis }) {
+  const total = analysis.riskScores.length;
+  const counts = {
+    critical: analysis.riskScores.filter((r) => r.level === 'critical').length,
+    high:     analysis.riskScores.filter((r) => r.level === 'high').length,
+    medium:   analysis.riskScores.filter((r) => r.level === 'medium').length,
+    low:      analysis.riskScores.filter((r) => r.level === 'low').length,
   };
+  const bars = [
+    { label: 'Critical', count: counts.critical, color: '#DC2626', fill: 'bg-[#DC2626]' },
+    { label: 'High',     count: counts.high,     color: '#D97706', fill: 'bg-[#D97706]' },
+    { label: 'Medium',   count: counts.medium,   color: '#2563EB', fill: 'bg-[#2563EB]' },
+    { label: 'Low',      count: counts.low,       color: '#059669', fill: 'bg-[#059669]' },
+  ];
+
   return (
-    <div className="space-y-2">
-      {Object.entries(counts).map(([method, count]) => count > 0 && (
-        <div key={method} className="flex items-center gap-2 text-xs font-mono">
-          <span className="w-14 text-muted-foreground">{method}</span>
-          <div className="flex-1 h-1.5 rounded-sm bg-secondary/40 overflow-hidden">
-            <div className={cn('h-full', colors[method] ?? 'bg-primary/60')} style={{ width: `${(count / total) * 100}%` }} />
+    <div className="space-y-3 p-4">
+      {bars.map(({ label, count, fill }) => (
+        <div key={label}>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[12px] text-[#374151]">{label}</span>
+            <span className="text-[12px] font-medium text-[#111827] tabular-nums">{count}</span>
           </div>
-          <span className="w-8 text-right tabular-nums text-foreground">{count}</span>
+          <div className="h-[5px] rounded-[3px] bg-[#F3F4F6] overflow-hidden">
+            <div
+              className={`h-full rounded-[3px] transition-all ${fill}`}
+              style={{ width: total > 0 ? `${(count / total) * 100}%` : '0%' }}
+            />
+          </div>
         </div>
       ))}
     </div>
   );
 }
 
+// ── Endpoint method bar ───────────────────────────────────────────────────────
+
+function MethodBar({ counts }: { counts: RepoAnalysis['endpointsByMethod'] }) {
+  const total = Object.values(counts).reduce((s, v) => s + v, 0);
+  if (total === 0) {
+    return <p className="text-[12px] text-[#9CA3AF] px-4 py-3">No endpoints detected</p>;
+  }
+  const METHOD_FILL: Record<string, string> = {
+    GET: 'bg-[#059669]', POST: 'bg-[#D97706]', PUT: 'bg-[#2563EB]',
+    PATCH: 'bg-[#7C3AED]', DELETE: 'bg-[#DC2626]',
+    OPTIONS: 'bg-[#7C3AED]', HEAD: 'bg-[#6B7280]',
+  };
+  return (
+    <div className="px-4 py-3 space-y-2.5">
+      {Object.entries(counts).filter(([, c]) => c > 0).map(([method, count]) => (
+        <div key={method} className="flex items-center gap-2.5">
+          <span className="w-14 text-[11px] font-mono text-[#6B7280]">{method}</span>
+          <div className="flex-1 h-[5px] rounded-[3px] bg-[#F3F4F6] overflow-hidden">
+            <div
+              className={cn('h-full rounded-[3px]', METHOD_FILL[method] ?? 'bg-[#2563EB]')}
+              style={{ width: `${(count / total) * 100}%` }}
+            />
+          </div>
+          <span className="w-7 text-right text-[11px] tabular-nums text-[#374151]">{count}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ── Main dashboard for a loaded repo ─────────────────────────────────────────
+
 function DashboardForRepo({ analysis }: { analysis: RepoAnalysis }) {
-  const topRisk = analysis.riskScores.slice(0, 5);
-  const topConn = analysis.topConnected.slice(0, 5);
+  const topRisk = analysis.riskScores.slice(0, 6);
   const cycleCount = analysis.dependencies.circular.length;
   const deadHigh = analysis.deadCodeCandidates.filter((c) => c.confidence === 'high').length;
 
   return (
-    <div className="space-y-6">
-      {/* Top row: identity + health */}
-      <div className="flex flex-col md:flex-row items-stretch gap-4">
-        <div className="flex-1 border border-border rounded-sm px-5 py-4 flex items-center gap-5">
-          <HealthRing score={analysis.healthScore} />
-          <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">Repository</p>
-            <h2 className="text-lg font-mono font-bold truncate">{analysis.repoName}</h2>
-            <div className="flex items-center gap-3 mt-2 text-xs font-mono text-muted-foreground">
-              {analysis.framework && <span className="px-1.5 py-0.5 rounded-sm bg-primary/10 text-primary">{analysis.framework}</span>}
-              {analysis.languages.slice(0, 3).map((l) => (
-                <span key={l}>{l}</span>
-              ))}
-              <span>{formatBytes(analysis.totalSize)}</span>
-            </div>
+    <div className="space-y-5">
+      {/* Repo identity header */}
+      <StudioCard className="p-4 flex items-center gap-5">
+        <HealthRing score={analysis.healthScore} />
+        <div className="flex-1 min-w-0">
+          <p className="text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em]">
+            Active Repository
+          </p>
+          <h2 className="text-[16px] font-semibold text-[#111827] mt-0.5 truncate">
+            {analysis.repoName}
+          </h2>
+          <div className="flex flex-wrap items-center gap-2 mt-2">
+            {analysis.framework && (
+              <span className="px-2 py-0.5 text-[11px] font-medium text-[#2563EB] bg-[#EFF6FF] rounded-[4px]">
+                {analysis.framework}
+              </span>
+            )}
+            {analysis.languages.slice(0, 3).map((l) => (
+              <span key={l} className="text-[12px] text-[#6B7280]">{l}</span>
+            ))}
+            <span className="text-[12px] text-[#9CA3AF]">{formatBytes(analysis.totalSize)}</span>
           </div>
         </div>
+        {/* Health pill */}
+        <div className={cn(
+          'shrink-0 px-3 py-1.5 rounded-full text-[12px] font-medium border',
+          analysis.healthScore >= 80
+            ? 'bg-[#ECFDF5] text-[#065F46] border-[#A7F3D0]'
+            : analysis.healthScore >= 60
+              ? 'bg-[#FFFBEB] text-[#92400E] border-[#FDE68A]'
+              : 'bg-[#FEF2F2] text-[#991B1B] border-[#FECACA]',
+        )}>
+          Health {analysis.healthScore}/100
+        </div>
+      </StudioCard>
+
+      {/* KPI grid */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+        <KpiCard label="Total Files"    value={analysis.fileCount}               hint={`${analysis.folderCount} folders`}                              color="blue"    icon={FileCode}      />
+        <KpiCard label="High Risk Files" value={analysis.highRiskCount}           hint={`${analysis.riskScores.filter(r=>r.level==='critical').length} critical`}  color="red"     icon={IconFlame}     to="/risk-map" />
+        <KpiCard label="Endpoints"       value={analysis.endpoints.length}        hint="HTTP routes detected"                                           color="neutral" icon={IconRoute}     to="/endpoint-map" />
+        <KpiCard label="Dead Candidates" value={analysis.deadCodeCandidates.length} hint={`${deadHigh} high confidence`}                               color="amber"   icon={Trash2}        to="/dead-code" />
       </div>
 
-      {/* Stat grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard label="Files" value={analysis.fileCount} hint={`${analysis.folderCount} folders`} />
-        <StatCard label="Dependencies" value={analysis.dependencies.total} hint={`${analysis.dependencies.internal} internal · ${analysis.dependencies.external} external`} to="/dependency-graph" />
-        <StatCard label="Endpoints" value={analysis.endpoints.length} hint="HTTP routes detected" to="/endpoint-map" />
-        <StatCard label="High-risk files" value={analysis.highRiskCount} accent={analysis.highRiskCount > 0 ? 'critical' : 'muted'} to="/risk-map" />
-        <StatCard label="Circular deps" value={cycleCount} accent={cycleCount > 0 ? 'critical' : 'muted'} />
-        <StatCard label="Dead code candidates" value={analysis.deadCodeCandidates.length} hint={`${deadHigh} high confidence`} to="/dead-code" />
-        <StatCard label="Medium risk" value={analysis.mediumRiskCount} accent={analysis.mediumRiskCount > 0 ? 'warn' : 'muted'} />
-        <StatCard label="Languages" value={analysis.languages.length} hint={analysis.languages.slice(0, 2).join(', ') || 'None'} />
+      {/* Second row of cards */}
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+        <KpiCard label="Dependencies"   value={analysis.dependencies.total}      hint={`${analysis.dependencies.internal} internal`}                  color="neutral" icon={Layers}        to="/dependency-graph" />
+        <KpiCard label="Circular Deps"  value={cycleCount}                        hint="dependency cycles"                                              color={cycleCount > 0 ? 'red' : 'neutral'} icon={Activity} />
+        <KpiCard label="Medium Risk"    value={analysis.mediumRiskCount}          hint="files"                                                          color="neutral" icon={AlertTriangle} />
+        <KpiCard label="Languages"      value={analysis.languages.length}         hint={analysis.languages.slice(0, 2).join(', ') || 'None detected'}  color="neutral" icon={FileCode}      />
       </div>
 
-      {/* Detail cards */}
+      {/* Detail panels */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="border border-border rounded-sm p-4 lg:col-span-1">
-          <div className="flex items-center gap-2 mb-3">
-            <Flame className="w-3.5 h-3.5 text-risk-critical" />
-            <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground/80">Top risky files</h3>
+        {/* Top risk files */}
+        <StudioCard className="lg:col-span-1">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#E4E7EC]">
+            <p className="text-[13px] font-medium text-[#111827]">Top Risk Files</p>
+            <Link to="/risk-map" className="text-[11px] text-[#2563EB] hover:underline flex items-center gap-0.5">
+              View all <IconChevronRight size={11} />
+            </Link>
           </div>
-          {topRisk.length === 0 ? (
-            <p className="text-xs text-muted-foreground font-mono">No risky files detected</p>
-          ) : (
-            <ul className="space-y-1.5">
-              {topRisk.map((r) => (
-                <li key={r.fileId} className="flex items-center justify-between text-xs font-mono gap-2">
-                  <Link to="/risk-map" className="truncate hover:text-primary">{r.path.split('/').slice(-2).join('/')}</Link>
-                  <span className={cn('shrink-0 tabular-nums px-1.5 py-0.5 rounded-sm', r.level === 'critical' ? 'bg-risk-critical/15 text-risk-critical' : r.level === 'high' ? 'bg-risk-high/15 text-risk-high' : 'bg-risk-medium/15 text-risk-medium')}>{r.score}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
-        <div className="border border-border rounded-sm p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Activity className="w-3.5 h-3.5 text-primary" />
-            <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground/80">Most connected files</h3>
+          <div className="p-1">
+            {topRisk.length === 0 ? (
+              <p className="text-[12px] text-[#9CA3AF] px-3 py-4">No risky files detected</p>
+            ) : (
+              <ul>
+                {topRisk.map((r) => (
+                  <li key={r.fileId} className="flex items-center justify-between gap-2 px-3 py-2 hover:bg-[#F8F9FB] rounded-md transition-colors">
+                    <Link to="/risk-map" className="flex items-center gap-2 min-w-0 flex-1">
+                      <FileCode className="w-3.5 h-3.5 text-[#9CA3AF] shrink-0" />
+                      <span className="text-[12px] font-mono text-[#374151] truncate">
+                        {r.path.split('/').slice(-2).join('/')}
+                      </span>
+                    </Link>
+                    <span className={riskBadgeClass(r.level)}>{r.level}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          {topConn.length === 0 ? (
-            <p className="text-xs text-muted-foreground font-mono">No dependency data</p>
-          ) : (
-            <ul className="space-y-1.5">
-              {topConn.map((c) => (
-                <li key={c.fileId} className="flex items-center justify-between text-xs font-mono gap-2">
-                  <Link to="/dependency-graph" className="truncate hover:text-primary">{c.path.split('/').slice(-2).join('/')}</Link>
-                  <span className="shrink-0 tabular-nums text-muted-foreground">{c.connectionCount} ←</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
+        </StudioCard>
 
-        <div className="border border-border rounded-sm p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Workflow className="w-3.5 h-3.5 text-primary" />
-            <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground/80">Endpoints by method</h3>
+        {/* Risk distribution */}
+        <StudioCard>
+          <div className="px-4 py-3 border-b border-[#E4E7EC]">
+            <p className="text-[13px] font-medium text-[#111827]">Risk Distribution</p>
+          </div>
+          <RiskDistribution analysis={analysis} />
+        </StudioCard>
+
+        {/* Endpoints by method */}
+        <StudioCard>
+          <div className="px-4 py-3 border-b border-[#E4E7EC]">
+            <p className="text-[13px] font-medium text-[#111827]">HTTP Methods</p>
           </div>
           <MethodBar counts={analysis.endpointsByMethod} />
-        </div>
+        </StudioCard>
       </div>
 
-      {/* Dependency health summary */}
-      <div className="border border-border rounded-sm p-4 space-y-2">
-        <div className="flex items-center gap-2 mb-1">
-          <CircleDashed className="w-3.5 h-3.5 text-primary" />
-          <h3 className="font-mono text-xs uppercase tracking-widest text-muted-foreground/80">Dependency health</h3>
-        </div>
-        <p className="text-xs font-mono text-muted-foreground">
-          {analysis.dependencies.internal} internal · {analysis.dependencies.external} external imports
-        </p>
-        {cycleCount > 0 ? (
-          <p className="text-xs font-mono text-risk-critical">
-            ⚠ {cycleCount} circular dependency group{cycleCount > 1 ? 's' : ''}. Break these to make refactors safer.
+      {/* Dependency health banner */}
+      {cycleCount > 0 && (
+        <div className="flex items-center gap-3 p-4 bg-[#FEF2F2] border border-[#FECACA] rounded-lg">
+          <AlertTriangle className="w-4 h-4 text-[#DC2626] shrink-0" />
+          <p className="text-[13px] text-[#991B1B]">
+            <strong>{cycleCount}</strong> circular dependency group{cycleCount > 1 ? 's' : ''} detected.{' '}
+            <Link to="/dependency-graph" className="underline">View in Dependency Graph</Link> to resolve them.
           </p>
-        ) : (
-          <p className="text-xs font-mono text-primary">✓ No circular dependencies detected</p>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
+
+// ── Repo list ─────────────────────────────────────────────────────────────────
 
 function RepoList() {
   const { data, isLoading, error } = useRepositories();
@@ -200,44 +296,80 @@ function RepoList() {
   if (error) return <PageError error={error} />;
 
   return (
-    <div className="space-y-3">
-      <h2 className="text-xs font-mono uppercase tracking-widest text-muted-foreground/60">All repositories</h2>
-      <div className="border border-border rounded-sm overflow-hidden">
-        <div className="flex items-center gap-4 px-4 py-2 text-[10px] font-mono text-muted-foreground/50 uppercase tracking-widest border-b border-border bg-secondary/20">
-          <span className="flex-1">name</span>
-          <span className="w-20 text-right">files</span>
-          <span className="w-20 text-right">size</span>
-          <span className="w-24 text-right">updated</span>
-          <span className="w-20 text-right">status</span>
-        </div>
-        {repos.length === 0 && (
-          <div className="py-10 flex flex-col items-center gap-3">
-            <p className="text-xs font-mono text-muted-foreground">no repositories yet</p>
-            <Link to="/upload" className="text-xs font-mono px-3 py-1.5 rounded-sm border border-primary/30 text-primary hover:bg-primary/8">
-              <Plus className="w-3 h-3 inline mr-1" /> analyze a repository
-            </Link>
-          </div>
-        )}
-        {repos.map((r) => {
-          const isReady = r.status === 'ready';
-          return (
-            <div key={r.id} className="flex items-center gap-4 px-4 py-3 border-b border-border last:border-0 text-xs font-mono">
-              <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', isReady ? 'bg-primary' : r.status === 'processing' ? 'bg-yellow-400 animate-pulse' : r.status === 'error' ? 'bg-destructive' : 'bg-muted-foreground')} />
-              <span className="flex-1 truncate text-foreground">{r.name}</span>
-              <span className="w-20 text-right text-muted-foreground tabular-nums">{r.fileCount.toLocaleString()}</span>
-              <span className="w-20 text-right text-muted-foreground tabular-nums">{formatBytes(r.totalSize)}</span>
-              <span className="w-24 text-right text-muted-foreground">{formatRelativeTime(r.updatedAt)}</span>
-              <span className="w-20 text-right text-muted-foreground">{r.status}</span>
-              <button onClick={() => deleteRepo(r.id)} className="p-1 text-muted-foreground/60 hover:text-destructive" title="delete">
-                <Trash2 className="w-3 h-3" />
-              </button>
-            </div>
-          );
-        })}
+    <StudioCard>
+      <div className="flex items-center justify-between px-4 py-3 border-b border-[#E4E7EC]">
+        <p className="text-[13px] font-medium text-[#111827]">All Repositories</p>
+        <Link
+          to="/upload"
+          className="flex items-center gap-1 text-[12px] text-[#2563EB] hover:underline"
+        >
+          <Plus className="w-3 h-3" /> New
+        </Link>
       </div>
-    </div>
+
+      {repos.length === 0 ? (
+        <div className="py-12 flex flex-col items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-[#EFF6FF] flex items-center justify-center">
+            <GitBranch className="w-5 h-5 text-[#2563EB]" />
+          </div>
+          <p className="text-[13px] text-[#6B7280]">No repositories yet</p>
+          <Link
+            to="/upload"
+            className="flex items-center gap-1.5 px-3 py-2 text-[13px] font-medium text-white bg-[#2563EB] hover:bg-[#1D4ED8] rounded-lg transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" /> Analyze your first repo
+          </Link>
+        </div>
+      ) : (
+        <>
+          {/* Table header */}
+          <div className="grid grid-cols-[1fr_80px_80px_100px_80px_32px] px-4 py-2 text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em] border-b border-[#E4E7EC] bg-[#F8F9FB]">
+            <span>Name</span>
+            <span className="text-right">Files</span>
+            <span className="text-right">Size</span>
+            <span className="text-right">Updated</span>
+            <span className="text-right">Status</span>
+            <span />
+          </div>
+          <ul>
+            {repos.map((r) => {
+              const isReady = r.status === 'ready';
+              const statusColor =
+                isReady          ? 'bg-[#059669]'
+                : r.status === 'processing' ? 'bg-[#D97706] animate-pulse'
+                : r.status === 'error'      ? 'bg-[#DC2626]'
+                :                              'bg-[#9CA3AF]';
+              return (
+                <li
+                  key={r.id}
+                  className="grid grid-cols-[1fr_80px_80px_100px_80px_32px] px-4 py-3 text-[12px] border-b border-[#E4E7EC] last:border-0 hover:bg-[#F8F9FB] transition-colors items-center"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${statusColor}`} />
+                    <span className="truncate font-medium text-[#111827]">{r.name}</span>
+                  </div>
+                  <span className="text-right tabular-nums text-[#6B7280]">{r.fileCount.toLocaleString()}</span>
+                  <span className="text-right tabular-nums text-[#6B7280]">{formatBytes(r.totalSize)}</span>
+                  <span className="text-right text-[#9CA3AF]">{formatRelativeTime(r.updatedAt)}</span>
+                  <span className="text-right text-[#9CA3AF]">{r.status}</span>
+                  <button
+                    onClick={() => deleteRepo(r.id)}
+                    className="flex items-center justify-center w-7 h-7 rounded-md text-[#9CA3AF] hover:text-[#DC2626] hover:bg-[#FEF2F2] transition-colors"
+                    title="Delete repository"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </>
+      )}
+    </StudioCard>
   );
 }
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export function DashboardPage() {
   const { repoId } = useActiveRepo();
@@ -245,31 +377,19 @@ export function DashboardPage() {
   const { data: analysis, isLoading, error } = useAnalysis(repoId ?? undefined);
 
   return (
-    <PageShell
-      title="Dashboard"
-      subtitle="High-level intelligence summary"
-      actions={
-        <Link to="/upload" className="text-xs font-mono px-3 py-1.5 rounded-sm border border-primary/30 text-primary hover:bg-primary/8 flex items-center gap-1.5">
-          <Plus className="w-3 h-3" /> new analysis
-        </Link>
-      }
-    >
+    <PageShell>
       {!repoId && (
-        <div className="border border-border rounded-sm p-6">
-          <NoRepoState
-            title="No repository selected"
-            subtitle="Analyze a repo to see its architecture intelligence here."
-          />
-        </div>
+        <NoRepoState
+          title="No repository selected"
+          subtitle="Analyze a repository to see architecture intelligence here."
+        />
       )}
 
       {repoId && isLoading && <PageLoading label="Building analysis…" />}
       {repoId && error && <PageError error={error} />}
       {repoId && analysis && repo && <DashboardForRepo analysis={analysis} />}
 
-      <div className="pt-2">
-        <RepoList />
-      </div>
+      <RepoList />
     </PageShell>
   );
 }

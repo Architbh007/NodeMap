@@ -43,7 +43,7 @@ export function RepoGraphPage() {
   if (!data?.data) return null;
 
   return (
-    <div className="h-[calc(100vh-3rem)] relative overflow-hidden">
+    <div className="h-[calc(100vh-44px)] relative overflow-hidden">
       <ErrorBoundary>
         <GraphCanvas graphNodes={data.data.nodes} graphEdges={data.data.edges} />
       </ErrorBoundary>

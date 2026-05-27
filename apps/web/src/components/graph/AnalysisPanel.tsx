@@ -57,7 +57,9 @@ export function AnalysisPanel() {
   ];
 
   return (
-    <aside className="absolute left-0 top-0 bottom-0 w-60 glass border-r border-border flex flex-col z-10 animate-fade-in">
+    <aside className="absolute left-0 top-0 bottom-0 w-60 flex flex-col z-20 animate-fade-in"
+      style={{ background: '#ffffff', borderRight: '1px solid #E4E7EC', boxShadow: '4px 0 24px rgba(0,0,0,0.08), 1px 0 4px rgba(0,0,0,0.04)' }}
+    >
       {/* Tab bar */}
       <div className="flex items-center gap-0.5 px-2 py-2 border-b border-border shrink-0">
         <div className="flex items-center gap-0.5 flex-1 min-w-0">

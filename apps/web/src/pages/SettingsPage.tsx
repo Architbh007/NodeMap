@@ -1,11 +1,64 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CheckCircle2, XCircle, Loader2, Key, Github, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2, CheckCircle2, XCircle } from 'lucide-react';
+import {
+  IconKey, IconBrandGithub, IconSettings, IconCode,
+  IconCheck, IconX,
+} from '@tabler/icons-react';
 import { settingsApi } from '@/api/client';
 import { TUNNER } from '@/constants/tunner';
-import { PageShell, PageError, PageLoading } from '@/components/layout/PageShell';
+import { PageShell, PageError, PageLoading, StudioCard } from '@/components/layout/PageShell';
 import { cn } from '@/lib/utils';
 import type { AiProviderId, UpdateSettingsInput } from '@nodemap/types';
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+function SettingsSection({
+  icon: Icon,
+  title,
+  description,
+  children,
+}: {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  icon: React.ComponentType<any>;
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <StudioCard>
+      <div className="flex items-start gap-3 px-5 py-4 border-b border-[#E4E7EC]">
+        <div className="w-8 h-8 rounded-lg bg-[#EFF6FF] flex items-center justify-center shrink-0">
+          <Icon size={15} className="text-[#2563EB]" />
+        </div>
+        <div>
+          <p className="text-[14px] font-medium text-[#111827]">{title}</p>
+          <p className="text-[12px] text-[#6B7280] mt-0.5">{description}</p>
+        </div>
+      </div>
+      <div className="p-5 space-y-4">{children}</div>
+    </StudioCard>
+  );
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <label className="block text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em] mb-1.5">
+      {children}
+    </label>
+  );
+}
+
+type TestState = 'idle' | 'testing' | 'ok' | 'fail';
+
+function TestStatusIcon({ status }: { status: TestState }) {
+  if (status === 'testing') return <Loader2 className="w-3.5 h-3.5 animate-spin text-[#2563EB]" />;
+  if (status === 'ok')      return <CheckCircle2 className="w-3.5 h-3.5 text-[#059669]" />;
+  if (status === 'fail')    return <XCircle className="w-3.5 h-3.5 text-[#DC2626]" />;
+  return null;
+}
+
+// ── Page ──────────────────────────────────────────────────────────────────────
 
 export function SettingsPage() {
   const qc = useQueryClient();
@@ -22,18 +75,18 @@ export function SettingsPage() {
     },
   });
 
-  const [provider, setProvider] = useState<AiProviderId>('disabled');
-  const [model, setModel] = useState('');
-  const [apiKey, setApiKey] = useState('');
-  const [showKey, setShowKey] = useState(false);
-  const [showGithubToken, setShowGithubToken] = useState(false);
-  const [githubToken, setGithubToken] = useState('');
-  const [ignored, setIgnored] = useState('');
-  const [testStatus, setTestStatus] = useState<'idle' | 'testing' | 'ok' | 'fail'>('idle');
-  const [testError, setTestError] = useState<string | null>(null);
-  const [githubTestStatus, setGithubTestStatus] = useState<'idle' | 'testing' | 'ok' | 'fail'>('idle');
-  const [githubTestError, setGithubTestError] = useState<string | null>(null);
-  const [githubLogin, setGithubLogin] = useState<string | null>(null);
+  const [provider,           setProvider]           = useState<AiProviderId>('disabled');
+  const [model,              setModel]              = useState('');
+  const [apiKey,             setApiKey]             = useState('');
+  const [showKey,            setShowKey]            = useState(false);
+  const [showGithubToken,    setShowGithubToken]    = useState(false);
+  const [githubToken,        setGithubToken]        = useState('');
+  const [ignored,            setIgnored]            = useState('');
+  const [testStatus,         setTestStatus]         = useState<TestState>('idle');
+  const [testError,          setTestError]          = useState<string | null>(null);
+  const [githubTestStatus,   setGithubTestStatus]   = useState<TestState>('idle');
+  const [githubTestError,    setGithubTestError]    = useState<string | null>(null);
+  const [githubLogin,        setGithubLogin]        = useState<string | null>(null);
 
   useEffect(() => {
     if (!res?.data) return;
@@ -47,10 +100,9 @@ export function SettingsPage() {
   if (!res?.data) return null;
 
   function saveAi() {
-    const body: UpdateSettingsInput = {
+    update.mutate({
       ai: { provider, model: model || undefined, ...(apiKey ? { apiKey } : {}) },
-    };
-    update.mutate(body);
+    });
     setApiKey('');
   }
 
@@ -59,16 +111,12 @@ export function SettingsPage() {
     update.mutate({ ignoredPaths: paths });
   }
 
-  async function testConnection() {
+  async function testAiConnection() {
     setTestStatus('testing'); setTestError(null);
     try {
       if (provider !== 'disabled') {
         await settingsApi.update({
-          ai: {
-            provider,
-            model: model.trim() || undefined,
-            ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}),
-          },
+          ai: { provider, model: model.trim() || undefined, ...(apiKey.trim() ? { apiKey: apiKey.trim() } : {}) },
         });
         if (apiKey.trim()) setApiKey('');
         await qc.invalidateQueries({ queryKey: ['settings'] });
@@ -105,262 +153,251 @@ export function SettingsPage() {
   }
 
   function removeAiKey() {
-    update.mutate(
-      { ai: { provider, apiKey: '' } },
-      {
-        onSuccess: () => {
-          setApiKey('');
-          setTestStatus('idle');
-          setTestError(null);
-        },
-      },
-    );
+    update.mutate({ ai: { provider, apiKey: '' } }, {
+      onSuccess: () => { setApiKey(''); setTestStatus('idle'); setTestError(null); },
+    });
   }
 
   function removeGithubToken() {
-    update.mutate(
-      { github: { token: '' } },
-      {
-        onSuccess: () => {
-          setGithubToken('');
-          setGithubTestStatus('idle');
-          setGithubTestError(null);
-          setGithubLogin(null);
-        },
+    update.mutate({ github: { token: '' } }, {
+      onSuccess: () => {
+        setGithubToken(''); setGithubTestStatus('idle');
+        setGithubTestError(null); setGithubLogin(null);
       },
-    );
+    });
   }
 
+  const PROVIDERS: { id: AiProviderId; label: string }[] = [
+    { id: 'disabled', label: 'Disabled' },
+    { id: 'openai',   label: 'OpenAI' },
+    { id: 'gemini',   label: 'Gemini' },
+  ];
+
   return (
-    <PageShell title="Settings" subtitle="Configure AI, ignored paths and integrations">
-      {/* AI Provider */}
-      <section className="border border-border rounded-sm p-5 space-y-4">
-        <div>
-          <h2 className="text-sm font-mono text-foreground flex items-center gap-2">
-            <Key className="w-3.5 h-3.5 text-primary" />
-            AI Provider
-          </h2>
-          <p className="text-xs font-mono text-muted-foreground mt-1">
-            {TUNNER.settingsNote}
-          </p>
-        </div>
-
-        <div className="space-y-2">
-          <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">Provider</label>
-          <div className="flex gap-2">
-            {(['disabled', 'openai', 'gemini'] as AiProviderId[]).map((p) => (
-              <button
-                key={p}
-                onClick={() => setProvider(p)}
-                className={cn(
-                  'text-xs font-mono px-3 py-1.5 rounded-sm border',
-                  provider === p ? 'border-primary text-primary bg-primary/8' : 'border-border text-muted-foreground hover:text-foreground',
-                )}
-              >
-                {p}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {provider !== 'disabled' && (
-          <>
-            <div className="space-y-2">
-              <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">Model</label>
-              <input
-                value={model}
-                onChange={(e) => setModel(e.target.value)}
-                placeholder={provider === 'openai' ? 'gpt-4o-mini' : 'gemini-2.0-flash'}
-                className="w-full md:w-80 bg-background border border-border rounded-sm px-3 py-1.5 text-xs font-mono focus:outline-none focus:border-primary/40"
-              />
+    <PageShell title="Settings" subtitle="Configure AI provider, ignored paths, and integrations">
+      <div className="space-y-5 max-w-2xl">
+        {/* ── AI Provider ─────────────────────────────────── */}
+        <SettingsSection
+          icon={IconKey}
+          title="AI Provider"
+          description={TUNNER.settingsNote}
+        >
+          {/* Provider selector */}
+          <div>
+            <FieldLabel>Provider</FieldLabel>
+            <div className="flex gap-2">
+              {PROVIDERS.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setProvider(p.id)}
+                  className={cn(
+                    'flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium border transition-colors',
+                    provider === p.id
+                      ? 'bg-[#EFF6FF] border-[#BFDBFE] text-[#1D4ED8]'
+                      : 'bg-white border-[#E4E7EC] text-[#6B7280] hover:text-[#111827]',
+                  )}
+                >
+                  {provider === p.id && <IconCheck size={12} />}
+                  {p.label}
+                </button>
+              ))}
             </div>
+          </div>
 
-            <div className="space-y-2">
-              <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">API Key</label>
-              <div className="flex items-center gap-2 max-w-md">
-                <div className="flex-1 relative">
+          {provider !== 'disabled' && (
+            <>
+              {/* Model */}
+              <div>
+                <FieldLabel>Model (optional)</FieldLabel>
+                <input
+                  value={model}
+                  onChange={(e) => setModel(e.target.value)}
+                  placeholder={provider === 'openai' ? 'gpt-4o-mini' : 'gemini-2.0-flash'}
+                  className="studio-input max-w-sm"
+                />
+              </div>
+
+              {/* API Key */}
+              <div>
+                <FieldLabel>API Key</FieldLabel>
+                <div className="relative max-w-sm">
                   <input
                     type={showKey ? 'text' : 'password'}
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
-                    placeholder={res.data.ai.apiKeySet ? '••• already set (paste to replace)' : 'paste API key'}
-                    className="w-full bg-background border border-border rounded-sm px-3 py-1.5 text-xs font-mono pr-8 focus:outline-none focus:border-primary/40"
+                    placeholder={res.data.ai.apiKeySet ? '••• already set (paste to replace)' : 'Paste API key'}
+                    className="studio-input pr-10"
                   />
                   <button
+                    type="button"
                     onClick={() => setShowKey((v) => !v)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280]"
                   >
-                    {showKey ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    {showKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
                 </div>
-              </div>
-              <p className="text-[10px] font-mono text-muted-foreground/60">
-                Stored locally in the API database. Get one at{' '}
-                {provider === 'openai'
-                  ? <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="text-primary underline">platform.openai.com/api-keys</a>
-                  : <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-primary underline">aistudio.google.com</a>}.
-              </p>
-              {provider === 'openai' && (
-                <p className="text-[10px] font-mono text-muted-foreground/60">
-                  Key must start with <code className="text-foreground/80">sk-</code>. Leave model empty for{' '}
-                  <code className="text-foreground/80">gpt-4o-mini</code>. Avoid <code className="text-foreground/80">o1</code> /{' '}
-                  <code className="text-foreground/80">o3</code> unless you know they work on your account.
+                <p className="text-[11px] text-[#9CA3AF] mt-1.5">
+                  Stored locally. Get one at{' '}
+                  {provider === 'openai'
+                    ? <a href="https://platform.openai.com/api-keys" target="_blank" rel="noreferrer" className="text-[#2563EB] hover:underline">platform.openai.com/api-keys</a>
+                    : <a href="https://aistudio.google.com/apikey" target="_blank" rel="noreferrer" className="text-[#2563EB] hover:underline">aistudio.google.com</a>
+                  }.
                 </p>
-              )}
-            </div>
-          </>
-        )}
+              </div>
+            </>
+          )}
 
-        <div className="flex items-center gap-2 pt-1 flex-wrap">
-          <button
-            onClick={saveAi}
-            disabled={update.isPending}
-            className="text-xs font-mono px-3 py-1.5 rounded-sm border border-primary/30 text-primary hover:bg-primary/10 disabled:opacity-40"
-          >
-            {update.isPending ? 'saving…' : 'Save'}
-          </button>
-          {provider !== 'disabled' && res.data.ai.apiKeySet && (
+          {/* Action buttons */}
+          <div className="flex items-center gap-2 pt-1 flex-wrap">
             <button
-              type="button"
-              onClick={removeAiKey}
+              onClick={saveAi}
               disabled={update.isPending}
-              className="text-xs font-mono px-3 py-1.5 rounded-sm border border-border text-muted-foreground hover:text-destructive hover:border-destructive/40 disabled:opacity-40"
+              className="h-8 px-4 rounded-lg text-[13px] font-medium text-white bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-40 transition-colors"
             >
-              Remove key
+              {update.isPending ? 'Saving…' : 'Save'}
             </button>
-          )}
-          <button
-            onClick={testConnection}
-            disabled={
-              testStatus === 'testing'
-              || provider === 'disabled'
-              || (!res.data.ai.apiKeySet && !apiKey.trim())
-            }
-            className="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-sm border border-border text-foreground hover:bg-secondary/40 disabled:opacity-40"
-          >
-            {testStatus === 'testing' && <Loader2 className="w-3 h-3 animate-spin" />}
-            {testStatus === 'ok' && <CheckCircle2 className="w-3 h-3 text-primary" />}
-            {testStatus === 'fail' && <XCircle className="w-3 h-3 text-destructive" />}
-            Test connection
-          </button>
-          {testStatus === 'fail' && testError && (
-            <span className="text-[10px] font-mono text-destructive max-w-xl break-words">{testError}</span>
-          )}
-          {testStatus === 'ok' && (
-            <span className="text-[10px] font-mono text-primary">connection successful</span>
-          )}
-        </div>
-      </section>
 
-      {/* Ignored paths */}
-      <section className="border border-border rounded-sm p-5 space-y-3">
-        <h2 className="text-sm font-mono text-foreground">Ignored paths</h2>
-        <p className="text-xs font-mono text-muted-foreground">
-          Future scans will skip files matching these globs. (One per line.)
-        </p>
-        <textarea
-          value={ignored}
-          onChange={(e) => setIgnored(e.target.value)}
-          rows={5}
-          placeholder={'docs/**\n*.generated.ts'}
-          className="w-full bg-background border border-border rounded-sm px-3 py-2 text-xs font-mono focus:outline-none focus:border-primary/40"
-        />
-        <button
-          onClick={saveIgnored}
-          disabled={update.isPending}
-          className="text-xs font-mono px-3 py-1.5 rounded-sm border border-primary/30 text-primary hover:bg-primary/10 disabled:opacity-40"
+            {provider !== 'disabled' && res.data.ai.apiKeySet && (
+              <button
+                onClick={removeAiKey}
+                disabled={update.isPending}
+                className="h-8 px-4 rounded-lg text-[12px] font-medium text-[#6B7280] bg-white border border-[#E4E7EC] hover:text-[#DC2626] hover:border-[#FECACA] disabled:opacity-40 transition-colors"
+              >
+                Remove key
+              </button>
+            )}
+
+            <button
+              onClick={testAiConnection}
+              disabled={testStatus === 'testing' || provider === 'disabled' || (!res.data.ai.apiKeySet && !apiKey.trim())}
+              className="flex items-center gap-1.5 h-8 px-4 rounded-lg text-[12px] font-medium text-[#374151] bg-white border border-[#E4E7EC] hover:bg-[#F8F9FB] disabled:opacity-40 transition-colors"
+            >
+              <TestStatusIcon status={testStatus} />
+              Test connection
+            </button>
+
+            {testStatus === 'ok' && (
+              <span className="text-[11px] font-medium text-[#059669]">✓ Connected successfully</span>
+            )}
+            {testStatus === 'fail' && testError && (
+              <span className="text-[11px] text-[#DC2626] max-w-sm break-words">{testError}</span>
+            )}
+          </div>
+        </SettingsSection>
+
+        {/* ── Ignored Paths ────────────────────────────────── */}
+        <SettingsSection
+          icon={IconCode}
+          title="Ignored Paths"
+          description="Future scans skip files matching these glob patterns (one per line)."
         >
-          {update.isPending ? 'saving…' : 'Save'}
-        </button>
-      </section>
+          <textarea
+            value={ignored}
+            onChange={(e) => setIgnored(e.target.value)}
+            rows={5}
+            placeholder={'docs/**\n*.generated.ts\ndist/**'}
+            className="studio-input font-mono resize-none"
+          />
+          <button
+            onClick={saveIgnored}
+            disabled={update.isPending}
+            className="h-8 px-4 rounded-lg text-[13px] font-medium text-white bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-40 transition-colors"
+          >
+            {update.isPending ? 'Saving…' : 'Save'}
+          </button>
+        </SettingsSection>
 
-      {/* GitHub */}
-      <section className="border border-border rounded-sm p-5 space-y-3">
-        <h2 className="text-sm font-mono text-foreground flex items-center gap-2">
-          <Github className="w-3.5 h-3.5" /> GitHub integration
-        </h2>
-        <p className="text-xs font-mono text-muted-foreground">
-          Used by <strong className="font-normal text-foreground/80">PR Impact</strong> to fetch changed files from a pull request.
-          Public repos work without a token; private repos need a classic PAT with <code className="text-foreground/80">repo</code> scope.
-        </p>
+        {/* ── GitHub ──────────────────────────────────────── */}
+        <SettingsSection
+          icon={IconBrandGithub}
+          title="GitHub Integration"
+          description="Used by PR Impact to fetch changed files from a pull request. Public repos work without a token; private repos need a classic PAT with repo scope."
+        >
+          {/* Token status */}
+          {res.data.github.connected && (
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#ECFDF5] border border-[#A7F3D0] rounded-lg">
+              <CheckCircle2 className="w-4 h-4 text-[#059669] shrink-0" />
+              <span className="text-[12px] text-[#065F46]">
+                GitHub token configured
+                {githubLogin ? ` — connected as @${githubLogin}` : ''}
+              </span>
+            </div>
+          )}
 
-        <div className="space-y-2">
-          <label className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">Personal access token</label>
-          <div className="flex items-center gap-2 max-w-md">
-            <div className="flex-1 relative">
+          <div>
+            <FieldLabel>Personal access token</FieldLabel>
+            <div className="relative max-w-sm">
               <input
                 type={showGithubToken ? 'text' : 'password'}
                 value={githubToken}
                 onChange={(e) => setGithubToken(e.target.value)}
                 placeholder={res.data.github.connected ? '••• already set (paste to replace)' : 'ghp_…'}
-                className="w-full bg-background border border-border rounded-sm px-3 py-1.5 text-xs font-mono pr-8 focus:outline-none focus:border-primary/40"
+                className="studio-input pr-10"
               />
               <button
                 type="button"
                 onClick={() => setShowGithubToken((v) => !v)}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#9CA3AF] hover:text-[#6B7280]"
               >
-                {showGithubToken ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                {showGithubToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
+            <p className="text-[11px] text-[#9CA3AF] mt-1.5">
+              Create at{' '}
+              <a href="https://github.com/settings/tokens" target="_blank" rel="noreferrer" className="text-[#2563EB] hover:underline">
+                github.com/settings/tokens
+              </a>
+              . Stored locally in the API database.
+            </p>
           </div>
-          <p className="text-[10px] font-mono text-muted-foreground/60">
-            Create at{' '}
-            <a href="https://github.com/settings/tokens" target="_blank" rel="noreferrer" className="text-primary underline">
-              github.com/settings/tokens
-            </a>
-            . Stored locally in the API database.
-          </p>
-        </div>
 
-        <div className="flex items-center gap-2 pt-1 flex-wrap">
-          <button
-            type="button"
-            onClick={async () => {
-              if (githubToken.trim()) {
-                await update.mutateAsync({ github: { token: githubToken.trim() } });
-                setGithubToken('');
-              }
-            }}
-            disabled={update.isPending || !githubToken.trim()}
-            className="text-xs font-mono px-3 py-1.5 rounded-sm border border-primary/30 text-primary hover:bg-primary/10 disabled:opacity-40"
-          >
-            {update.isPending ? 'saving…' : 'Save token'}
-          </button>
-          {res.data.github.connected && (
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
-              onClick={removeGithubToken}
-              disabled={update.isPending}
-              className="text-xs font-mono px-3 py-1.5 rounded-sm border border-border text-muted-foreground hover:text-destructive hover:border-destructive/40 disabled:opacity-40"
+              disabled={update.isPending || !githubToken.trim()}
+              onClick={async () => {
+                if (githubToken.trim()) {
+                  await update.mutateAsync({ github: { token: githubToken.trim() } });
+                  setGithubToken('');
+                }
+              }}
+              className="h-8 px-4 rounded-lg text-[13px] font-medium text-white bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-40 transition-colors"
             >
-              Remove token
+              {update.isPending ? 'Saving…' : 'Save token'}
             </button>
-          )}
-          <button
-            type="button"
-            onClick={testGithubConnection}
-            disabled={
-              githubTestStatus === 'testing'
-              || (!res.data.github.connected && !githubToken.trim())
-            }
-            className="flex items-center gap-1.5 text-xs font-mono px-3 py-1.5 rounded-sm border border-border text-foreground hover:bg-secondary/40 disabled:opacity-40"
-          >
-            {githubTestStatus === 'testing' && <Loader2 className="w-3 h-3 animate-spin" />}
-            {githubTestStatus === 'ok' && <CheckCircle2 className="w-3 h-3 text-primary" />}
-            {githubTestStatus === 'fail' && <XCircle className="w-3 h-3 text-destructive" />}
-            Test connection
-          </button>
-          {githubTestStatus === 'ok' && (
-            <span className="text-[10px] font-mono text-primary">
-              connected{githubLogin ? ` as @${githubLogin}` : ''}
-            </span>
-          )}
-          {githubTestStatus === 'fail' && githubTestError && (
-            <span className="text-[10px] font-mono text-destructive max-w-xl break-words">{githubTestError}</span>
-          )}
-        </div>
-      </section>
+
+            {res.data.github.connected && (
+              <button
+                type="button"
+                onClick={removeGithubToken}
+                disabled={update.isPending}
+                className="h-8 px-4 rounded-lg text-[12px] font-medium text-[#6B7280] bg-white border border-[#E4E7EC] hover:text-[#DC2626] hover:border-[#FECACA] disabled:opacity-40 transition-colors"
+              >
+                Remove token
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={testGithubConnection}
+              disabled={githubTestStatus === 'testing' || (!res.data.github.connected && !githubToken.trim())}
+              className="flex items-center gap-1.5 h-8 px-4 rounded-lg text-[12px] font-medium text-[#374151] bg-white border border-[#E4E7EC] hover:bg-[#F8F9FB] disabled:opacity-40 transition-colors"
+            >
+              <TestStatusIcon status={githubTestStatus} />
+              Test connection
+            </button>
+
+            {githubTestStatus === 'ok' && (
+              <span className="text-[11px] font-medium text-[#059669]">
+                ✓ Connected{githubLogin ? ` as @${githubLogin}` : ''}
+              </span>
+            )}
+            {githubTestStatus === 'fail' && githubTestError && (
+              <span className="text-[11px] text-[#DC2626] max-w-sm break-words">{githubTestError}</span>
+            )}
+          </div>
+        </SettingsSection>
+      </div>
     </PageShell>
   );
 }

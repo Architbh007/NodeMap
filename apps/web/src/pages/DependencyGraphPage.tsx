@@ -6,6 +6,7 @@ import { graphApi, analysisApi } from '@/api/client';
 import { DependencyGraphCanvas } from '@/components/graph/DependencyGraphCanvas';
 import { NoRepoState, PageError, PageLoading } from '@/components/layout/PageShell';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { cn } from '@/lib/utils';
 import type { ArchitectureLayer } from '@nodemap/types';
 
 const LAYERS: Array<ArchitectureLayer | 'all'> = [
@@ -53,7 +54,7 @@ export function DependencyGraphPage() {
   if (!analysis || !graph?.data) return null;
 
   return (
-    <div className="h-[calc(100vh-3rem)] flex">
+    <div className="h-[calc(100vh-44px)] flex bg-[#F8F9FB]">
       {/* Graph + filter bar */}
       <div className="flex-1 relative">
         <div className="absolute top-3 left-3 z-10 flex flex-wrap gap-1 max-w-3xl">
@@ -64,10 +65,10 @@ export function DependencyGraphPage() {
                 key={l}
                 onClick={() => setLayerFilter(l)}
                 className={
-                  'text-[10px] font-mono px-2 py-1 rounded-sm border transition-colors ' +
+                  'text-[10px] font-medium px-2.5 py-1 rounded-full border transition-colors ' +
                   (active
-                    ? 'border-primary text-primary bg-primary/10'
-                    : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground/40')
+                    ? 'border-[#2563EB] text-[#1D4ED8] bg-[#EFF6FF]'
+                    : 'border-[#E4E7EC] text-[#6B7280] bg-white hover:text-[#111827] hover:border-[#BFDBFE]')
                 }
               >
                 {l}
@@ -88,29 +89,43 @@ export function DependencyGraphPage() {
       </div>
 
       {/* Side panel */}
-      <aside className="w-80 border-l border-border bg-background/95 overflow-y-auto">
+      <aside className="w-72 border-l border-[#E4E7EC] bg-white overflow-y-auto">
         {!selected || !selectedFile ? (
-          <div className="px-4 py-6 text-xs font-mono text-muted-foreground">
-            <p className="text-foreground mb-1">Click a node</p>
-            <p>See dependencies, impact, and risk for that file.</p>
+          <div className="px-4 py-8 text-center">
+            <p className="text-[13px] font-medium text-[#374151]">Click a node</p>
+            <p className="text-[12px] text-[#9CA3AF] mt-1">See dependencies, impact, and risk.</p>
           </div>
         ) : (
           <div className="px-4 py-4 space-y-4">
             <div>
-              <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">File</p>
-              <p className="font-mono text-xs text-foreground break-all">{selectedFile.layer?.path}</p>
-              <div className="flex items-center gap-2 mt-2 text-[10px] font-mono">
-                <span className="px-1.5 py-0.5 rounded-sm bg-secondary/40">{selectedFile.layer?.layer}</span>
-                {selectedFile.risk && <span className="px-1.5 py-0.5 rounded-sm bg-secondary/40 capitalize">{selectedFile.risk.level} risk · {selectedFile.risk.score}</span>}
+              <p className="text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em] mb-1">File</p>
+              <p className="text-[11px] font-mono text-[#374151] break-all">{selectedFile.layer?.path}</p>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-[10px] font-medium px-2 py-0.5 bg-[#F3F4F6] text-[#6B7280] rounded">
+                  {selectedFile.layer?.layer}
+                </span>
+                {selectedFile.risk && (
+                  <span className={cn(
+                    'text-[10px] font-medium px-2 py-0.5 rounded capitalize',
+                    selectedFile.risk.level === 'critical' ? 'bg-[#FEF2F2] text-[#991B1B]' :
+                    selectedFile.risk.level === 'high'     ? 'bg-[#FEF3C7] text-[#92400E]' :
+                    selectedFile.risk.level === 'medium'   ? 'bg-[#EFF6FF] text-[#1D4ED8]' :
+                                                              'bg-[#F0FDF4] text-[#166534]'
+                  )}>
+                    {selectedFile.risk.level} · {selectedFile.risk.score}
+                  </span>
+                )}
               </div>
             </div>
 
-            {selectedFile.risk && (
+            {selectedFile.risk?.reasons && selectedFile.risk.reasons.length > 0 && (
               <div>
-                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mb-1">Why risky</p>
-                <ul className="space-y-1 text-xs font-mono text-foreground/80">
+                <p className="text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em] mb-1.5">Why risky</p>
+                <ul className="space-y-1">
                   {selectedFile.risk.reasons.map((r, i) => (
-                    <li key={i}>· {r}</li>
+                    <li key={i} className="text-[11px] text-[#374151] flex gap-1.5">
+                      <span className="shrink-0 text-[#DC2626]">·</span> {r}
+                    </li>
                   ))}
                 </ul>
               </div>
@@ -119,42 +134,39 @@ export function DependencyGraphPage() {
             {impact?.data && (
               <>
                 <div>
-                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mb-1">
+                  <p className="text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em] mb-1.5">
                     Direct dependents ({impact.data.directDependents.length})
                   </p>
-                  <ul className="space-y-1 text-xs font-mono">
+                  <ul className="space-y-1">
                     {impact.data.directDependents.slice(0, 10).map((d) => (
-                      <li key={d.fileId} className="truncate text-muted-foreground">{d.path}</li>
+                      <li key={d.fileId} className="text-[11px] font-mono text-[#6B7280] truncate">{d.path}</li>
                     ))}
                     {impact.data.directDependents.length > 10 && (
-                      <li className="text-muted-foreground/50">…and {impact.data.directDependents.length - 10} more</li>
+                      <li className="text-[10px] text-[#9CA3AF]">…and {impact.data.directDependents.length - 10} more</li>
                     )}
                   </ul>
                 </div>
 
-                <div>
-                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mb-1">
-                    Affected endpoints ({impact.data.affectedEndpoints.length})
-                  </p>
-                  {impact.data.affectedEndpoints.length === 0 ? (
-                    <p className="text-xs font-mono text-muted-foreground">No endpoints affected</p>
-                  ) : (
-                    <ul className="space-y-1 text-xs font-mono">
+                {impact.data.affectedEndpoints.length > 0 && (
+                  <div>
+                    <p className="text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em] mb-1.5">
+                      Affected endpoints ({impact.data.affectedEndpoints.length})
+                    </p>
+                    <ul className="space-y-1">
                       {impact.data.affectedEndpoints.slice(0, 8).map((e) => (
-                        <li key={e.id} className="text-foreground/80">
-                          <span className="text-primary">{e.method}</span> {e.path}
+                        <li key={e.id} className="text-[11px] font-mono">
+                          <span className="text-[#2563EB] font-medium">{e.method}</span>{' '}
+                          <span className="text-[#374151]">{e.path}</span>
                         </li>
                       ))}
                     </ul>
-                  )}
-                </div>
+                  </div>
+                )}
 
-                <div>
-                  <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mb-1">
-                    Indirect impact
-                  </p>
-                  <p className="text-xs font-mono text-muted-foreground">
-                    {impact.data.indirectDependents.length} indirect dependent(s), {impact.data.affectedModules.length} module(s)
+                <div className="bg-[#F8F9FB] rounded-lg px-3 py-2">
+                  <p className="text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em] mb-0.5">Indirect</p>
+                  <p className="text-[12px] text-[#374151]">
+                    {impact.data.indirectDependents.length} file(s), {impact.data.affectedModules.length} module(s)
                   </p>
                 </div>
               </>

@@ -439,15 +439,12 @@ export function UploadPage() {
   }, []);
 
   return (
-    <div className="min-h-[calc(100vh-3rem)] flex items-center justify-center px-4 py-12">
+    <div className="min-h-[calc(100vh-44px)] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-xl space-y-6 animate-fade-in">
 
-        <div className="space-y-0.5">
-          <p className="text-xs font-mono text-muted-foreground flex items-center gap-1.5">
-            <span className="text-primary">$</span> nodemap analyze
-          </p>
-          <h1 className="text-xl font-bold font-mono text-foreground">Analyze a Repository</h1>
-          <p className="text-sm text-muted-foreground pt-0.5">
+        <div className="space-y-1">
+          <h1 className="text-[18px] font-semibold text-[#111827]">Analyze a Repository</h1>
+          <p className="text-[13px] text-[#6B7280]">
             Paste a URL or upload a ZIP. NodeMap builds the full architecture map.
           </p>
         </div>

@@ -1,36 +1,37 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Workflow, ArrowDown, Database } from 'lucide-react';
+import { ArrowDown, Database } from 'lucide-react';
+import { IconRoute } from '@tabler/icons-react';
 import { useActiveRepo } from '@/store/activeRepoStore';
 import { useAnalysis } from '@/hooks/useAnalysis';
 import { analysisApi } from '@/api/client';
-import { PageShell, NoRepoState, PageError, PageLoading } from '@/components/layout/PageShell';
+import { PageShell, NoRepoState, PageError, PageLoading, StudioCard } from '@/components/layout/PageShell';
 import { cn } from '@/lib/utils';
 import type { ArchitectureLayer, HttpMethod } from '@nodemap/types';
 
-const METHOD_COLORS: Record<HttpMethod, string> = {
-  GET: 'text-blue-400 border-blue-400/40',
-  POST: 'text-green-400 border-green-400/40',
-  PUT: 'text-yellow-400 border-yellow-400/40',
-  PATCH: 'text-orange-400 border-orange-400/40',
-  DELETE: 'text-red-400 border-red-400/40',
-  OPTIONS: 'text-purple-400 border-purple-400/40',
-  HEAD: 'text-gray-400 border-gray-400/40',
+const METHOD_BADGE: Record<HttpMethod, string> = {
+  GET:     'badge-GET',
+  POST:    'badge-POST',
+  PUT:     'badge-PUT',
+  PATCH:   'badge-PATCH',
+  DELETE:  'badge-DELETE',
+  OPTIONS: 'badge-OPTIONS',
+  HEAD:    'badge-HEAD',
 };
 
-const LAYER_COLORS: Record<ArchitectureLayer, string> = {
-  route:      'border-blue-400/60 text-blue-400',
-  controller: 'border-purple-400/60 text-purple-400',
-  service:    'border-green-400/60 text-green-400',
-  repository: 'border-yellow-400/60 text-yellow-400',
-  middleware: 'border-pink-400/60 text-pink-400',
-  util:       'border-slate-400/60 text-slate-400',
-  config:     'border-gray-400/60 text-gray-400',
-  model:      'border-orange-400/60 text-orange-400',
-  view:       'border-cyan-400/60 text-cyan-400',
-  test:       'border-slate-500/60 text-slate-500',
-  entry:      'border-primary/60 text-primary',
-  unknown:    'border-neutral-500/60 text-neutral-500',
+const LAYER_STYLE: Record<ArchitectureLayer, { border: string; bg: string; text: string; badge: string }> = {
+  route:      { border: 'border-[#BFDBFE]', bg: 'bg-[#EFF6FF]',  text: 'text-[#1D4ED8]', badge: 'bg-[#EFF6FF] text-[#1D4ED8]' },
+  controller: { border: 'border-[#DDD6FE]', bg: 'bg-[#F5F3FF]',  text: 'text-[#5B21B6]', badge: 'bg-[#F5F3FF] text-[#5B21B6]' },
+  service:    { border: 'border-[#A7F3D0]', bg: 'bg-[#ECFDF5]',  text: 'text-[#065F46]', badge: 'bg-[#ECFDF5] text-[#065F46]' },
+  repository: { border: 'border-[#FDE68A]', bg: 'bg-[#FFFBEB]',  text: 'text-[#92400E]', badge: 'bg-[#FFFBEB] text-[#92400E]' },
+  middleware: { border: 'border-[#FBCFE8]', bg: 'bg-[#FDF2F8]',  text: 'text-[#9D174D]', badge: 'bg-[#FDF2F8] text-[#9D174D]' },
+  util:       { border: 'border-[#E5E7EB]', bg: 'bg-[#F9FAFB]',  text: 'text-[#374151]', badge: 'bg-[#F9FAFB] text-[#374151]' },
+  config:     { border: 'border-[#E5E7EB]', bg: 'bg-[#F3F4F6]',  text: 'text-[#6B7280]', badge: 'bg-[#F3F4F6] text-[#6B7280]' },
+  model:      { border: 'border-[#FED7AA]', bg: 'bg-[#FFF7ED]',  text: 'text-[#92400E]', badge: 'bg-[#FFF7ED] text-[#92400E]' },
+  view:       { border: 'border-[#A5F3FC]', bg: 'bg-[#ECFEFF]',  text: 'text-[#155E75]', badge: 'bg-[#ECFEFF] text-[#155E75]' },
+  test:       { border: 'border-[#E2E8F0]', bg: 'bg-[#F8FAFC]',  text: 'text-[#64748B]', badge: 'bg-[#F8FAFC] text-[#64748B]' },
+  entry:      { border: 'border-[#BFDBFE]', bg: 'bg-[#EFF6FF]',  text: 'text-[#1D4ED8]', badge: 'bg-[#EFF6FF] text-[#1D4ED8]' },
+  unknown:    { border: 'border-[#E5E7EB]', bg: 'bg-white',       text: 'text-[#6B7280]', badge: 'bg-[#F3F4F6] text-[#6B7280]' },
 };
 
 export function EndpointMapPage() {
@@ -44,113 +45,143 @@ export function EndpointMapPage() {
     enabled: !!repoId && !!selectedId,
   });
 
-  const filteredEndpoints = useMemo(() => analysis?.endpoints ?? [], [analysis]);
+  const endpoints = useMemo(() => analysis?.endpoints ?? [], [analysis]);
 
   if (!repoId) {
-    return <PageShell title="Endpoint Map" subtitle="API request → response flow"><NoRepoState title="No repository selected" subtitle="Pick a repository in the top bar." /></PageShell>;
+    return (
+      <PageShell title="Endpoint Map" subtitle="API request → response flow">
+        <NoRepoState title="No repository selected" subtitle="Pick a repository in the top bar." />
+      </PageShell>
+    );
   }
   if (isLoading) return <PageLoading label="Detecting endpoints…" />;
   if (error) return <PageShell title="Endpoint Map"><PageError error={error} /></PageShell>;
   if (!analysis) return null;
 
-  const noEndpoints = filteredEndpoints.length === 0;
+  if (endpoints.length === 0) {
+    return (
+      <PageShell title="Endpoint Map" subtitle="API request → response flow">
+        <StudioCard className="py-16 flex flex-col items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-[#EFF6FF] flex items-center justify-center">
+            <IconRoute size={22} className="text-[#2563EB]" />
+          </div>
+          <p className="text-[15px] font-medium text-[#111827]">No API endpoints detected</p>
+          <p className="text-[13px] text-[#6B7280] max-w-sm text-center">
+            This appears to be a static/frontend-only project with no backend request flows to map.
+          </p>
+        </StudioCard>
+      </PageShell>
+    );
+  }
 
   return (
     <PageShell title="Endpoint Map" subtitle="API request → response flow">
-      {noEndpoints ? (
-        <div className="border border-border rounded-sm py-16 px-6 text-center space-y-3">
-          <Workflow className="w-10 h-10 text-muted-foreground/40 mx-auto" />
-          <h2 className="font-mono text-base text-foreground">No API endpoints detected in this repository.</h2>
-          <p className="font-mono text-xs text-muted-foreground max-w-md mx-auto">
-            This appears to be a static/frontend-only project, so there are no backend request flows to map.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4">
-          {/* Endpoint list */}
-          <div className="border border-border rounded-sm overflow-hidden">
-            <div className="px-3 py-2 border-b border-border text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 bg-secondary/20">
-              {filteredEndpoints.length} endpoint{filteredEndpoints.length !== 1 ? 's' : ''}
-            </div>
-            <div className="max-h-[calc(100vh-13rem)] overflow-y-auto">
-              {filteredEndpoints.map((ep) => {
-                const active = ep.id === selectedId;
-                return (
-                  <button
-                    key={ep.id}
-                    onClick={() => setSelectedId(ep.id)}
-                    className={cn(
-                      'w-full flex items-center gap-2 px-3 py-2 text-xs font-mono text-left border-b border-border/40 last:border-0',
-                      active ? 'bg-primary/8 text-primary' : 'text-foreground hover:bg-secondary/40',
-                    )}
-                  >
-                    <span className={cn('px-1.5 py-0.5 rounded-sm border text-[10px] tabular-nums shrink-0', METHOD_COLORS[ep.method])}>
-                      {ep.method}
-                    </span>
-                    <span className="truncate">{ep.path}</span>
-                  </button>
-                );
-              })}
-            </div>
+      <div className="grid grid-cols-1 md:grid-cols-[320px_1fr] gap-4">
+        {/* Endpoint list */}
+        <StudioCard className="overflow-hidden self-start">
+          <div className="px-4 py-3 border-b border-[#E4E7EC] bg-[#F8F9FB]">
+            <p className="text-[12px] font-medium text-[#374151]">
+              {endpoints.length} endpoint{endpoints.length !== 1 ? 's' : ''}
+            </p>
           </div>
+          <div className="max-h-[calc(100vh-16rem)] overflow-y-auto">
+            {endpoints.map((ep) => {
+              const isActive = ep.id === selectedId;
+              return (
+                <button
+                  key={ep.id}
+                  onClick={() => setSelectedId(ep.id)}
+                  className={cn(
+                    'w-full flex items-center gap-2.5 px-3 py-2.5 border-b border-[#E4E7EC]/60 last:border-0 text-left transition-colors',
+                    isActive ? 'bg-[#EFF6FF]' : 'hover:bg-[#F8F9FB]',
+                  )}
+                >
+                  <span className={METHOD_BADGE[ep.method]}>{ep.method}</span>
+                  <span className="truncate text-[12px] font-mono text-[#374151]">{ep.path}</span>
+                </button>
+              );
+            })}
+          </div>
+        </StudioCard>
 
-          {/* Flow diagram */}
-          <div className="border border-border rounded-sm p-6 min-h-[400px]">
-            {!selectedId ? (
-              <div className="h-full flex items-center justify-center text-center">
-                <div className="space-y-2">
-                  <Workflow className="w-8 h-8 text-muted-foreground/40 mx-auto" />
-                  <p className="text-sm font-mono text-foreground">Select an endpoint</p>
-                  <p className="text-xs font-mono text-muted-foreground">See its full execution flow</p>
+        {/* Flow diagram */}
+        <StudioCard className="min-h-[400px]">
+          {!selectedId ? (
+            <div className="h-full flex items-center justify-center text-center py-20">
+              <div>
+                <div className="w-12 h-12 rounded-xl bg-[#EFF6FF] flex items-center justify-center mx-auto mb-3">
+                  <IconRoute size={20} className="text-[#2563EB]" />
                 </div>
+                <p className="text-[14px] font-medium text-[#374151]">Select an endpoint</p>
+                <p className="text-[12px] text-[#9CA3AF] mt-1">View its full execution flow</p>
               </div>
-            ) : !flowRes?.data ? (
-              <PageLoading label="Resolving execution flow…" />
-            ) : (
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 font-mono">
-                  <span className={cn('px-2 py-1 rounded-sm border text-xs tabular-nums', METHOD_COLORS[flowRes.data.endpoint.method])}>
-                    {flowRes.data.endpoint.method}
-                  </span>
-                  <span className="text-base font-bold text-foreground">{flowRes.data.endpoint.path}</span>
-                  <span className="text-[10px] text-muted-foreground/70 ml-auto px-1.5 py-0.5 border border-border rounded-sm uppercase">
-                    {flowRes.data.endpoint.framework}
-                  </span>
-                </div>
+            </div>
+          ) : !flowRes?.data ? (
+            <PageLoading label="Resolving execution flow…" />
+          ) : (
+            <div className="p-5 space-y-4">
+              {/* Endpoint header */}
+              <div className="flex items-center gap-3 pb-4 border-b border-[#E4E7EC]">
+                <span className={METHOD_BADGE[flowRes.data.endpoint.method]}>
+                  {flowRes.data.endpoint.method}
+                </span>
+                <span className="text-[16px] font-semibold text-[#111827] font-mono">
+                  {flowRes.data.endpoint.path}
+                </span>
+                <span className="ml-auto text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em] px-2 py-1 bg-[#F3F4F6] rounded-md">
+                  {flowRes.data.endpoint.framework}
+                </span>
+              </div>
 
-                <div className="flex flex-col items-center gap-2 pt-4">
-                  {(() => {
-                    const steps = flowRes.data!.steps;
-                    return steps.map((s, i) => (
-                      <div key={i} className="flex flex-col items-center gap-2 w-full max-w-md">
-                        <div className={cn(
-                          'border rounded-sm px-3 py-2 w-full text-xs font-mono bg-background',
-                          LAYER_COLORS[s.layer],
-                        )}>
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-bold">{s.label}</span>
-                            {s.layer === 'unknown' && s.path === 'database' && <Database className="w-3 h-3" />}
-                            <span className="text-[10px] uppercase tracking-widest opacity-60">{s.layer}</span>
+              {/* Steps */}
+              <div className="flex flex-col items-center gap-0 pt-2">
+                {flowRes.data.steps.map((s, i) => {
+                  const style = LAYER_STYLE[s.layer];
+                  return (
+                    <div key={i} className="flex flex-col items-center w-full max-w-lg">
+                      <div className={cn(
+                        'w-full border rounded-lg px-4 py-3',
+                        style.border, style.bg,
+                      )}>
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="flex items-center gap-2 min-w-0">
+                            {s.layer === 'unknown' && s.path === 'database' && (
+                              <Database className="w-3.5 h-3.5 text-[#6B7280] shrink-0" />
+                            )}
+                            <span className={cn('text-[13px] font-medium', style.text)}>
+                              {s.label}
+                            </span>
                           </div>
-                          {s.path && s.path !== s.label && (
-                            <p className="text-[11px] text-muted-foreground mt-0.5 break-all">{s.path}</p>
-                          )}
-                          {s.detail && (
-                            <p className="text-[10px] text-muted-foreground/70 mt-0.5">{s.detail}</p>
-                          )}
+                          <span className={cn(
+                            'text-[9px] font-medium uppercase tracking-[0.06em] px-1.5 py-0.5 rounded',
+                            style.badge,
+                          )}>
+                            {s.layer}
+                          </span>
                         </div>
-                        {i < steps.length - 1 && (
-                          <ArrowDown className="w-3 h-3 text-muted-foreground/40" />
+                        {s.path && s.path !== s.label && (
+                          <p className="text-[11px] font-mono text-[#6B7280] mt-1 break-all">
+                            {s.path}
+                          </p>
+                        )}
+                        {s.detail && (
+                          <p className="text-[11px] text-[#9CA3AF] mt-0.5">{s.detail}</p>
                         )}
                       </div>
-                    ));
-                  })()}
-                </div>
+                      {i < flowRes.data!.steps.length - 1 && (
+                        <div className="flex flex-col items-center py-1.5">
+                          <div className="w-px h-4 bg-[#E4E7EC]" />
+                          <ArrowDown className="w-3 h-3 text-[#9CA3AF]" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-            )}
-          </div>
-        </div>
-      )}
+            </div>
+          )}
+        </StudioCard>
+      </div>
     </PageShell>
   );
 }

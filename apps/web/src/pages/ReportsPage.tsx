@@ -1,26 +1,29 @@
 import { useState } from 'react';
-import { FileDown, FileJson, FileText } from 'lucide-react';
+import { FileDown } from 'lucide-react';
+import { IconFileExport, IconMarkdown, IconJson, IconCheck } from '@tabler/icons-react';
 import { useActiveRepo } from '@/store/activeRepoStore';
 import { reportsApi } from '@/api/client';
-import { PageShell, NoRepoState } from '@/components/layout/PageShell';
+import { PageShell, NoRepoState, StudioCard } from '@/components/layout/PageShell';
 import { cn } from '@/lib/utils';
 import type { ReportSection, ReportFormat } from '@nodemap/types';
 
 const SECTIONS: { id: ReportSection; label: string; description: string }[] = [
-  { id: 'overview', label: 'Overview', description: 'Repo metadata, file counts, health' },
-  { id: 'architecture', label: 'Architecture', description: 'Layer breakdown, most-connected files' },
-  { id: 'endpoints', label: 'Endpoints', description: 'All detected HTTP endpoints' },
-  { id: 'dependencies', label: 'Dependencies', description: 'Internal & external dependency counts' },
-  { id: 'risk', label: 'Risk', description: 'Risk-scored files with reasons' },
-  { id: 'circular', label: 'Circular deps', description: 'Cycle groups and members' },
-  { id: 'deadcode', label: 'Dead code', description: 'Unused-file candidates' },
-  { id: 'recommendations', label: 'Recommendations', description: 'Suggested next steps' },
+  { id: 'overview',         label: 'Overview',        description: 'Repo metadata, file counts, health score' },
+  { id: 'architecture',     label: 'Architecture',    description: 'Layer breakdown, most-connected files' },
+  { id: 'endpoints',        label: 'Endpoints',       description: 'All detected HTTP endpoints' },
+  { id: 'dependencies',     label: 'Dependencies',    description: 'Internal & external dependency counts' },
+  { id: 'risk',             label: 'Risk',            description: 'Risk-scored files with reasons' },
+  { id: 'circular',         label: 'Circular Deps',   description: 'Cycle groups and members' },
+  { id: 'deadcode',         label: 'Dead Code',       description: 'Unused-file candidates with confidence' },
+  { id: 'recommendations',  label: 'Recommendations', description: 'Suggested next steps' },
 ];
 
 export function ReportsPage() {
   const { repoId } = useActiveRepo();
-  const [picked, setPicked] = useState<Set<ReportSection>>(new Set(['overview', 'architecture', 'endpoints', 'risk', 'circular', 'deadcode', 'recommendations']));
-  const [busy, setBusy] = useState<ReportFormat | null>(null);
+  const [picked, setPicked] = useState<Set<ReportSection>>(
+    new Set(['overview', 'architecture', 'endpoints', 'risk', 'circular', 'deadcode', 'recommendations']),
+  );
+  const [busy, setBusy]   = useState<ReportFormat | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   function toggle(s: ReportSection) {
@@ -29,6 +32,14 @@ export function ReportsPage() {
       if (next.has(s)) next.delete(s); else next.add(s);
       return next;
     });
+  }
+
+  function selectAll() {
+    setPicked(new Set(SECTIONS.map((s) => s.id)));
+  }
+
+  function clearAll() {
+    setPicked(new Set());
   }
 
   async function download(format: ReportFormat) {
@@ -46,57 +57,93 @@ export function ReportsPage() {
   if (!repoId) return <PageShell title="Reports"><NoRepoState title="No repository selected" /></PageShell>;
 
   return (
-    <PageShell title="Reports" subtitle="Export architecture intelligence">
-      <div className="border border-border rounded-sm p-4 space-y-3">
-        <h3 className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">Sections to include</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {SECTIONS.map((s) => {
-            const on = picked.has(s.id);
-            return (
-              <button
-                key={s.id}
-                onClick={() => toggle(s.id)}
-                className={cn(
-                  'border rounded-sm px-3 py-2 text-left transition-colors',
-                  on ? 'border-primary/50 bg-primary/8' : 'border-border hover:border-foreground/30',
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-mono text-foreground">{s.label}</span>
-                  <span className={cn('w-3 h-3 rounded-sm border', on ? 'bg-primary border-primary' : 'border-muted-foreground/30')} />
-                </div>
-                <p className="text-[10px] font-mono text-muted-foreground mt-0.5">{s.description}</p>
-              </button>
-            );
-          })}
+    <PageShell title="Reports" subtitle="Export architecture intelligence as Markdown or JSON">
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-5">
+        {/* Section picker */}
+        <StudioCard>
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#E4E7EC]">
+            <p className="text-[13px] font-medium text-[#111827]">Sections to include</p>
+            <div className="flex items-center gap-2">
+              <button onClick={selectAll} className="text-[11px] text-[#2563EB] hover:underline">All</button>
+              <span className="text-[#D1D5DB]">·</span>
+              <button onClick={clearAll}  className="text-[11px] text-[#6B7280] hover:underline">None</button>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-2 p-4">
+            {SECTIONS.map((s) => {
+              const isOn = picked.has(s.id);
+              return (
+                <button
+                  key={s.id}
+                  onClick={() => toggle(s.id)}
+                  className={cn(
+                    'flex items-start gap-3 p-3 rounded-lg border text-left transition-all',
+                    isOn
+                      ? 'border-[#BFDBFE] bg-[#EFF6FF]'
+                      : 'border-[#E4E7EC] bg-white hover:border-[#BFDBFE] hover:bg-[#F8F9FB]',
+                  )}
+                >
+                  {/* Checkbox */}
+                  <div className={cn(
+                    'w-4 h-4 rounded shrink-0 mt-0.5 flex items-center justify-center border transition-colors',
+                    isOn ? 'bg-[#2563EB] border-[#2563EB]' : 'border-[#D1D5DB] bg-white',
+                  )}>
+                    {isOn && <IconCheck size={10} className="text-white" />}
+                  </div>
+                  <div className="min-w-0">
+                    <p className={cn('text-[13px] font-medium', isOn ? 'text-[#1D4ED8]' : 'text-[#111827]')}>
+                      {s.label}
+                    </p>
+                    <p className="text-[11px] text-[#9CA3AF] mt-0.5">{s.description}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </StudioCard>
+
+        {/* Export panel */}
+        <div className="space-y-3">
+          <StudioCard className="p-4 space-y-3">
+            <p className="text-[13px] font-medium text-[#111827]">Export</p>
+            <p className="text-[12px] text-[#6B7280]">
+              {picked.size} of {SECTIONS.length} sections selected
+            </p>
+
+            {/* Markdown */}
+            <button
+              disabled={busy !== null || picked.size === 0}
+              onClick={() => download('markdown')}
+              className="w-full flex items-center gap-2.5 h-10 px-4 rounded-lg text-[13px] font-medium text-white bg-[#2563EB] hover:bg-[#1D4ED8] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <IconMarkdown size={16} />
+              {busy === 'markdown' ? 'Preparing…' : 'Download Markdown'}
+            </button>
+
+            {/* JSON */}
+            <button
+              disabled={busy !== null || picked.size === 0}
+              onClick={() => download('json')}
+              className="w-full flex items-center gap-2.5 h-10 px-4 rounded-lg text-[13px] font-medium text-[#374151] bg-white border border-[#E4E7EC] hover:bg-[#F8F9FB] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            >
+              <IconJson size={16} className="text-[#6B7280]" />
+              {busy === 'json' ? 'Preparing…' : 'Download JSON'}
+            </button>
+
+            {error && (
+              <p className="text-[11px] text-[#DC2626] mt-1">{error}</p>
+            )}
+          </StudioCard>
+
+          {/* Privacy notice */}
+          <div className="flex items-start gap-2.5 p-3 bg-[#F8F9FB] border border-[#E4E7EC] rounded-lg">
+            <FileDown className="w-4 h-4 text-[#9CA3AF] shrink-0 mt-0.5" />
+            <p className="text-[11px] text-[#9CA3AF] leading-relaxed">
+              Reports are generated locally. No data leaves the server. Files are downloaded directly to your browser.
+            </p>
+          </div>
         </div>
       </div>
-
-      <div className="flex flex-wrap gap-2">
-        <button
-          disabled={busy !== null || picked.size === 0}
-          onClick={() => download('markdown')}
-          className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-sm border border-primary/30 text-primary hover:bg-primary/10 disabled:opacity-40"
-        >
-          <FileText className="w-3 h-3" />
-          {busy === 'markdown' ? 'preparing…' : 'Download Markdown'}
-        </button>
-        <button
-          disabled={busy !== null || picked.size === 0}
-          onClick={() => download('json')}
-          className="flex items-center gap-1.5 text-xs font-mono px-3 py-2 rounded-sm border border-border text-foreground hover:bg-secondary/40 disabled:opacity-40"
-        >
-          <FileJson className="w-3 h-3" />
-          {busy === 'json' ? 'preparing…' : 'Download JSON'}
-        </button>
-        <span className="text-[10px] font-mono text-muted-foreground self-center ml-auto flex items-center gap-1">
-          <FileDown className="w-3 h-3" /> reports are generated locally. No data leaves the server.
-        </span>
-      </div>
-
-      {error && (
-        <p className="text-xs font-mono text-destructive">{error}</p>
-      )}
     </PageShell>
   );
 }

@@ -5,23 +5,23 @@ import { cn } from '@/lib/utils';
 import type { NodeData, RiskLevel } from '@nodemap/types';
 
 const RISK_ACCENT: Record<RiskLevel, string> = {
-  low:      'bg-emerald-500',
-  medium:   'bg-amber-500',
-  high:     'bg-orange-500',
-  critical: 'bg-red-500',
+  low:      'bg-[#059669]',
+  medium:   'bg-[#D97706]',
+  high:     'bg-[#D97706]',
+  critical: 'bg-[#DC2626]',
 };
 
 const RISK_GLOW: Record<RiskLevel, string> = {
   low:      '',
   medium:   '',
-  high:     'shadow-orange-500/15',
-  critical: 'shadow-red-500/20',
+  high:     'shadow-amber-300/20',
+  critical: 'shadow-red-300/25',
 };
 
 function fileGlowStyle(importedBy: number): React.CSSProperties | undefined {
-  if (importedBy >= 10) return { boxShadow: '0 0 0 1.5px rgb(0 255 135 / 0.8), 0 0 18px rgb(0 255 135 / 0.35)' };
-  if (importedBy >= 5)  return { boxShadow: '0 0 0 1px rgb(0 255 135 / 0.5), 0 0 10px rgb(0 255 135 / 0.2)' };
-  if (importedBy >= 2)  return { boxShadow: '0 0 0 1px rgb(0 255 135 / 0.25)' };
+  if (importedBy >= 10) return { boxShadow: '0 0 0 1.5px rgb(37 99 235 / 0.6), 0 2px 12px rgb(37 99 235 / 0.15)' };
+  if (importedBy >= 5)  return { boxShadow: '0 0 0 1px rgb(37 99 235 / 0.4), 0 2px 8px rgb(37 99 235 / 0.10)' };
+  if (importedBy >= 2)  return { boxShadow: '0 0 0 1px rgb(37 99 235 / 0.20)' };
   return undefined;
 }
 

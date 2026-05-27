@@ -1,7 +1,6 @@
 import AdmZip from 'adm-zip';
 import path from 'path';
 import { mkdirSync, existsSync, readdirSync, statSync, readFileSync, rmSync } from 'fs';
-import { fileURLToPath } from 'url';
 import { dbTransaction, dbRunBatch, dbRun } from '../storage/db.js';
 import { generateId, now } from '../utils/id.js';
 import {
@@ -18,8 +17,7 @@ import { resolveImport, isRelativeImport, extractPackageName } from './dependenc
 import { invalidateAnalysis } from '../analysis/analysisCache.js';
 import type { IngestionResult, LanguageStat, FileType } from '@nodemap/types';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const UPLOADS_DIR = path.resolve(__dirname, '../../uploads');
+export const UPLOADS_DIR = process.env.UPLOADS_DIR ?? path.join(process.cwd(), 'uploads');
 
 // ─── Language detection ───────────────────────────────────
 

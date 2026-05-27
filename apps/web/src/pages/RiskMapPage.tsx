@@ -1,26 +1,20 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Flame, Sparkles, AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Sparkles, FileCode } from 'lucide-react';
+import { IconFlame } from '@tabler/icons-react';
 import { useActiveRepo } from '@/store/activeRepoStore';
 import { useAnalysis } from '@/hooks/useAnalysis';
 import { analysisApi, aiApi } from '@/api/client';
-import { PageShell, NoRepoState, PageError, PageLoading } from '@/components/layout/PageShell';
+import { PageShell, NoRepoState, PageError, PageLoading, StudioCard } from '@/components/layout/PageShell';
 import { cn } from '@/lib/utils';
 import type { RiskLevel } from '@nodemap/types';
 import { TUNNER } from '@/constants/tunner';
 
-const LEVEL_COLORS: Record<RiskLevel, string> = {
-  critical: 'bg-risk-critical/20 text-risk-critical border-risk-critical/30',
-  high: 'bg-risk-high/20 text-risk-high border-risk-high/30',
-  medium: 'bg-risk-medium/20 text-risk-medium border-risk-medium/30',
-  low: 'bg-risk-low/20 text-risk-low border-risk-low/30',
-};
-
-const LEVEL_DOT: Record<RiskLevel, string> = {
-  critical: 'bg-risk-critical',
-  high: 'bg-risk-high',
-  medium: 'bg-risk-medium',
-  low: 'bg-risk-low',
+const RISK_META: Record<RiskLevel, { badge: string; dot: string; label: string }> = {
+  critical: { badge: 'badge-critical', dot: 'bg-[#DC2626]', label: 'Critical' },
+  high:     { badge: 'badge-high',     dot: 'bg-[#D97706]', label: 'High' },
+  medium:   { badge: 'badge-medium',   dot: 'bg-[#2563EB]', label: 'Medium' },
+  low:      { badge: 'badge-low',      dot: 'bg-[#059669]', label: 'Low' },
 };
 
 export function RiskMapPage() {
@@ -73,141 +67,175 @@ export function RiskMapPage() {
 
   const counts = {
     critical: analysis.riskScores.filter((r) => r.level === 'critical').length,
-    high: analysis.riskScores.filter((r) => r.level === 'high').length,
-    medium: analysis.riskScores.filter((r) => r.level === 'medium').length,
-    low: analysis.riskScores.filter((r) => r.level === 'low').length,
+    high:     analysis.riskScores.filter((r) => r.level === 'high').length,
+    medium:   analysis.riskScores.filter((r) => r.level === 'medium').length,
+    low:      analysis.riskScores.filter((r) => r.level === 'low').length,
   };
 
   return (
     <PageShell title="Risk Map" subtitle="Files ranked by deterministic risk score">
-      {/* Risk distribution */}
-      <div className="grid grid-cols-4 gap-2">
-        {(['critical', 'high', 'medium', 'low'] as RiskLevel[]).map((level) => (
-          <button
-            key={level}
-            onClick={() => setLevelFilter(levelFilter === level ? 'all' : level)}
-            className={cn(
-              'border rounded-sm px-3 py-2 text-left transition-colors',
-              levelFilter === level ? 'border-primary' : 'border-border hover:border-foreground/40',
-            )}
-          >
-            <div className="flex items-center gap-2">
-              <span className={cn('w-2 h-2 rounded-full', LEVEL_DOT[level])} />
-              <span className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">{level}</span>
-            </div>
-            <p className="text-xl font-mono font-bold mt-0.5 tabular-nums">{counts[level]}</p>
-          </button>
-        ))}
+      {/* Risk level filter cards */}
+      <div className="grid grid-cols-4 gap-3">
+        {(['critical', 'high', 'medium', 'low'] as RiskLevel[]).map((level) => {
+          const meta = RISK_META[level];
+          const isActive = levelFilter === level;
+          return (
+            <button
+              key={level}
+              onClick={() => setLevelFilter(isActive ? 'all' : level)}
+              className={cn(
+                'bg-white border rounded-lg px-4 py-3 text-left transition-all',
+                isActive ? 'border-[#2563EB] ring-2 ring-[#2563EB]/20' : 'border-[#E4E7EC] hover:border-[#BFDBFE]',
+              )}
+            >
+              <div className="flex items-center gap-2 mb-2">
+                <span className={cn('w-2 h-2 rounded-full shrink-0', meta.dot)} />
+                <span className="text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em]">{meta.label}</span>
+              </div>
+              <p className="text-[22px] font-medium text-[#111827] tabular-nums">{counts[level]}</p>
+              <p className="text-[11px] text-[#9CA3AF] mt-0.5">files</p>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Two-pane: list + detail */}
+      {/* Two-pane layout */}
       <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-4">
-        <div className="border border-border rounded-sm overflow-hidden">
-          <div className="px-3 py-2 border-b border-border text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 bg-secondary/20 flex items-center justify-between">
-            <span>{filtered.length} files</span>
+        {/* File list */}
+        <StudioCard className="overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-[#E4E7EC] bg-[#F8F9FB]">
+            <p className="text-[12px] font-medium text-[#374151]">
+              {filtered.length} {levelFilter !== 'all' ? levelFilter : 'total'} files
+            </p>
             {levelFilter !== 'all' && (
-              <button className="text-foreground hover:text-primary" onClick={() => setLevelFilter('all')}>clear filter</button>
+              <button
+                onClick={() => setLevelFilter('all')}
+                className="text-[11px] text-[#6B7280] hover:text-[#111827] transition-colors"
+              >
+                Clear filter
+              </button>
             )}
           </div>
-          <div className="max-h-[calc(100vh-18rem)] overflow-y-auto">
+          <div className="max-h-[calc(100vh-20rem)] overflow-y-auto">
             {filtered.slice(0, 200).map((r) => {
-              const active = r.fileId === selected;
+              const isActive = r.fileId === selected;
+              const meta = RISK_META[r.level];
               return (
                 <button
                   key={r.fileId}
                   onClick={() => setSelected(r.fileId)}
                   className={cn(
-                    'w-full flex items-center gap-3 px-3 py-2 border-b border-border/30 last:border-0 text-xs font-mono text-left',
-                    active ? 'bg-primary/8' : 'hover:bg-secondary/40',
+                    'w-full flex items-center gap-3 px-4 py-2.5 border-b border-[#E4E7EC]/60 last:border-0 text-left transition-colors',
+                    isActive ? 'bg-[#EFF6FF]' : 'hover:bg-[#F8F9FB]',
                   )}
                 >
-                  <span className={cn('w-2 h-2 rounded-full shrink-0', LEVEL_DOT[r.level])} />
-                  <span className="flex-1 truncate text-foreground">{r.path}</span>
-                  <span className={cn('text-[10px] px-1.5 py-0.5 rounded-sm border tabular-nums', LEVEL_COLORS[r.level])}>{r.score}</span>
+                  <span className={cn('w-1.5 h-1.5 rounded-full shrink-0', meta.dot)} />
+                  <span className="flex-1 truncate text-[12px] font-mono text-[#374151]">{r.path}</span>
+                  <span className={meta.badge}>{r.score}</span>
                 </button>
               );
             })}
           </div>
-        </div>
+        </StudioCard>
 
-        <aside className="border border-border rounded-sm p-4 max-h-[calc(100vh-15rem)] overflow-y-auto">
+        {/* Detail pane */}
+        <StudioCard className="max-h-[calc(100vh-15rem)] overflow-y-auto">
           {!selectedRisk ? (
-            <div className="text-center text-xs font-mono text-muted-foreground py-8">
-              <Flame className="w-6 h-6 text-muted-foreground/40 mx-auto mb-2" />
-              Pick a file
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <div className="w-10 h-10 rounded-xl bg-[#FEF2F2] flex items-center justify-center mb-3">
+                <IconFlame size={18} className="text-[#DC2626]" />
+              </div>
+              <p className="text-[13px] font-medium text-[#374151]">Select a file</p>
+              <p className="text-[12px] text-[#9CA3AF] mt-1">See risk details and impact</p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="p-4 space-y-4">
+              {/* File info */}
               <div>
-                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60">Risk file</p>
-                <p className="font-mono text-xs text-foreground break-all">{selectedRisk.path}</p>
+                <p className="text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em] mb-1">Risk File</p>
+                <p className="text-[12px] font-mono text-[#374151] break-all">{selectedRisk.path}</p>
                 <div className="flex items-center gap-2 mt-2">
-                  <span className={cn('text-[10px] font-mono px-1.5 py-0.5 rounded-sm border', LEVEL_COLORS[selectedRisk.level])}>
-                    {selectedRisk.level} · {selectedRisk.score}
+                  <span className={RISK_META[selectedRisk.level].badge}>
+                    {selectedRisk.level} · score {selectedRisk.score}
                   </span>
                 </div>
               </div>
 
+              {/* Reasons */}
               <div>
-                <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mb-1">Why it's risky</p>
-                <ul className="space-y-1 text-xs font-mono">
+                <p className="text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em] mb-2">
+                  Why it's risky
+                </p>
+                <ul className="space-y-1.5">
                   {selectedRisk.reasons.map((r, i) => (
-                    <li key={i} className="text-foreground/80">· {r}</li>
+                    <li key={i} className="flex items-start gap-2 text-[12px] text-[#374151]">
+                      <span className="shrink-0 w-1 h-1 rounded-full bg-[#9CA3AF] mt-[6px]" />
+                      {r}
+                    </li>
                   ))}
                 </ul>
               </div>
 
+              {/* Impact data */}
               {impactRes?.data && (
                 <>
-                  <div className="grid grid-cols-3 gap-2 text-center">
-                    <div className="border border-border rounded-sm px-2 py-1.5">
-                      <p className="text-[10px] font-mono text-muted-foreground/60">direct</p>
-                      <p className="text-sm font-mono tabular-nums">{impactRes.data.directDependents.length}</p>
-                    </div>
-                    <div className="border border-border rounded-sm px-2 py-1.5">
-                      <p className="text-[10px] font-mono text-muted-foreground/60">indirect</p>
-                      <p className="text-sm font-mono tabular-nums">{impactRes.data.indirectDependents.length}</p>
-                    </div>
-                    <div className="border border-border rounded-sm px-2 py-1.5">
-                      <p className="text-[10px] font-mono text-muted-foreground/60">endpoints</p>
-                      <p className="text-sm font-mono tabular-nums">{impactRes.data.affectedEndpoints.length}</p>
-                    </div>
+                  <div className="grid grid-cols-3 gap-2 py-1">
+                    {[
+                      { label: 'Direct', val: impactRes.data.directDependents.length },
+                      { label: 'Indirect', val: impactRes.data.indirectDependents.length },
+                      { label: 'Endpoints', val: impactRes.data.affectedEndpoints.length },
+                    ].map(({ label, val }) => (
+                      <div key={label} className="bg-[#F8F9FB] border border-[#E4E7EC] rounded-md px-2 py-2 text-center">
+                        <p className="text-[10px] text-[#9CA3AF] uppercase tracking-[0.06em]">{label}</p>
+                        <p className="text-[16px] font-medium text-[#111827] tabular-nums">{val}</p>
+                      </div>
+                    ))}
                   </div>
 
                   {impactRes.data.affectedEndpoints.length > 0 && (
                     <div>
-                      <p className="text-[10px] font-mono uppercase tracking-widest text-muted-foreground/60 mb-1">Affected endpoints</p>
-                      <ul className="space-y-1 text-xs font-mono">
+                      <p className="text-[10px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em] mb-2">
+                        Affected Endpoints
+                      </p>
+                      <ul className="space-y-1">
                         {impactRes.data.affectedEndpoints.slice(0, 6).map((e) => (
-                          <li key={e.id} className="text-foreground/80"><span className="text-primary">{e.method}</span> {e.path}</li>
+                          <li key={e.id} className="flex items-center gap-2 text-[11px] font-mono">
+                            <span className="text-[#2563EB] font-medium">{e.method}</span>
+                            <span className="text-[#374151]">{e.path}</span>
+                          </li>
                         ))}
                       </ul>
                     </div>
                   )}
 
                   {selectedRisk.inputs.inCircularDep && (
-                    <div className="flex items-start gap-2 text-xs font-mono text-risk-high px-2 py-1.5 border border-risk-high/30 rounded-sm">
-                      <AlertTriangle className="w-3 h-3 mt-0.5 shrink-0" />
+                    <div className="flex items-start gap-2 text-[12px] text-[#92400E] px-3 py-2.5 bg-[#FFFBEB] border border-[#FDE68A] rounded-md">
+                      <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
                       <span>Part of a circular dependency. Refactoring is risky.</span>
                     </div>
                   )}
                 </>
               )}
 
-              <div className="pt-2 border-t border-border space-y-2">
+              {/* AI explain */}
+              <div className="pt-2 border-t border-[#E4E7EC] space-y-2">
                 <button
                   onClick={explainWithAI}
                   disabled={aiBusy}
-                  className="w-full flex items-center justify-center gap-1.5 text-xs font-mono py-1.5 rounded-sm border border-primary/30 text-primary hover:bg-primary/10 disabled:opacity-40 disabled:cursor-wait"
+                  className="w-full flex items-center justify-center gap-1.5 text-[12px] font-medium py-2 rounded-lg border border-[#BFDBFE] text-[#2563EB] bg-[#EFF6FF] hover:bg-[#DBEAFE] disabled:opacity-40 disabled:cursor-wait transition-colors"
                 >
-                  <Sparkles className="w-3 h-3" />
+                  <Sparkles className="w-3.5 h-3.5" />
                   {aiBusy ? TUNNER.thinking : TUNNER.ask}
                 </button>
-                {aiError && <p className="text-[10px] font-mono text-destructive">{aiError}</p>}
+                {aiError && (
+                  <p className="text-[11px] text-[#DC2626]">{aiError}</p>
+                )}
                 {aiOutput && (
-                  <div className="space-y-1">
-                    <p className="text-[9px] font-mono uppercase tracking-widest text-primary/60">{TUNNER.explainBy}</p>
-                    <div className="text-xs font-mono text-foreground/90 whitespace-pre-wrap border border-border/40 rounded-sm p-2 bg-secondary/20">
+                  <div className="bg-[#F8F9FB] border border-[#E4E7EC] rounded-md p-3">
+                    <p className="text-[9px] font-medium text-[#9CA3AF] uppercase tracking-[0.06em] mb-1.5">
+                      {TUNNER.explainBy}
+                    </p>
+                    <div className="text-[11px] font-mono text-[#374151] whitespace-pre-wrap leading-relaxed">
                       {aiOutput}
                     </div>
                   </div>
@@ -215,7 +243,7 @@ export function RiskMapPage() {
               </div>
             </div>
           )}
-        </aside>
+        </StudioCard>
       </div>
     </PageShell>
   );
